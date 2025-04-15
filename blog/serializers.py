@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
 from .models import (
-    UserProfile,CustomUser,UserPerformance,Review,Category,RecentActivity,AllowedParticipant,Answer,Option,Question, UserSettings,AdminSettings, ManageTests,UserResponse,
+    UserProfile,CustomUser,UserPerformance,Review,Category,StudentCapture,RecentActivity,AllowedParticipant,Answer,Option,Question, UserSettings,AdminSettings, ManageTests,UserResponse,
  ActivityLog,Performer,Enrollment,TestUser,TestResult,TestAttempt,Feature, LeaderboardEntry,
  Testimonial,Test, Announcement, FAQ, PasswordReset, ContactMessage,AdminNotification, Notification,AttemptedTest,Achievement,
 PerformanceStat,CompletedTest, TestSummary,
@@ -287,7 +287,14 @@ class UserAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAnswer
         fields = ['id', 'question_text', 'selected_option']
-        
+
+
+class StudentCaptureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentCapture
+        fields = '__all__'
+        read_only_fields = ('timestamp', 'is_valid', 'validation_message')
+
 class TestAttemptSerializer(serializers.ModelSerializer):
     test_name = serializers.CharField(source="test.title", read_only=True)
     subject = serializers.CharField(source="test.subject", read_only=True)

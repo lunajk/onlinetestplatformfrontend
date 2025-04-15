@@ -13,9 +13,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-from decouple import config
-SECRET_KEY = config('SECRET_KEY')
-
 
 AUTH_USER_MODEL = 'blog.CustomUser'
 
@@ -36,7 +33,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'onlinetestcreationbackend.onrender.com']
 
+DEBUG = True
 
+
+SECRET_KEY = 'django-insecure--3uvw$200a+&a&_&=!#411+yqncsh-(-n!*r+ahey3em!6f==e'  
 
 # Application definition
 

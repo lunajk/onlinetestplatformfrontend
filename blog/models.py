@@ -114,6 +114,22 @@ class Category(models.Model):
     def __str__(self):
         return self.category_name
 
+class StudentCapture(models.Model):
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    image = models.ImageField(upload_to='captures/')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_valid = models.BooleanField(default=False)
+    validation_message = models.CharField(max_length=255, blank=True)
+    face_detected = models.BooleanField(default=False)
+    multiple_faces = models.BooleanField(default=False)
+    looking_straight = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"Capture by {self.student.username if self.student else 'Anonymous'} at {self.timestamp}"
+    
 class UserPerformance(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     total_tests = models.IntegerField(default=0)

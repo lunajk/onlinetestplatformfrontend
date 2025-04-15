@@ -1,8 +1,14 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 import io
+import os
+import cv2
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 import PyPDF2
 import csv
+import tempfile
+from datetime import datetime
 from django.db import models
 from django.core.mail import send_mail
 from django.conf import settings
@@ -138,6 +144,7 @@ def user_management_stats(request):
         "admin_users": admin_users,
         "normal_users": normal_users
     })
+
 def test_completion_rate_view(request):
     # Initialize a dictionary to hold completion rates
     completion_rates = {}
@@ -230,6 +237,107 @@ def dashboard_view(request):
     }
 
     return JsonResponse(dashboard_data)
+
+class CaptureImageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if 'image' not in request.FILES:
+            return Response(
+                {'success': False, 'message': 'No image provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            image_file = request.FILES['image']
+            user = request.user
+
+            # Create user-specific directory
+            user_dir = os.path.join(settings.MEDIA_ROOT, 'captures', str(user.id))
+            os.makedirs(user_dir, exist_ok=True)
+
+            # Read image content into memory once
+            image_bytes = image_file.read()
+
+            # Save image permanently
+            filename = f"capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+            file_path = os.path.join(user_dir, filename)
+            default_storage.save(file_path, ContentFile(image_bytes))
+
+            # Write image to temporary file for OpenCV
+            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
+                tmp.write(image_bytes)
+                tmp_path = tmp.name
+
+            try:
+                # Load image using OpenCV
+                img = cv2.imread(tmp_path)
+                if img is None:
+                    raise ValueError("Could not read the image file")
+
+                # Convert to grayscale
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+                # Load OpenCV face detector
+                face_cascade = cv2.CascadeClassifier(
+                    cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+                )
+
+                # Detect faces
+                faces = face_cascade.detectMultiScale(
+                    gray,
+                    scaleFactor=1.1,
+                    minNeighbors=5,
+                    minSize=(100, 100)
+                )
+
+                # Validation logic
+                validation = {
+                    'face_detected': len(faces) > 0,
+                    'multiple_faces': len(faces) > 1,
+                    'looking_straight': False,
+                    'is_valid': False,
+                    'message': ''
+                }
+
+                if not validation['face_detected']:
+                    validation['message'] = 'No face detected'
+                elif validation['multiple_faces']:
+                    validation['message'] = 'Multiple faces detected'
+                else:
+                    # Check if face is centered
+                    (x, y, w, h) = faces[0]
+                    face_center_x = x + w / 2
+                    img_center_x = img.shape[1] / 2
+
+                    if abs(face_center_x - img_center_x) < img.shape[1] * 0.1:
+                        validation['looking_straight'] = True
+                        validation['is_valid'] = True
+                        validation['message'] = 'Valid capture'
+                    else:
+                        validation['message'] = 'Face not centered'
+
+                return Response({
+                    'success': validation['is_valid'],
+                    'message': validation['message'],
+                    'validation': validation,
+                    'image_url': default_storage.url(file_path),
+                    'user': {
+                        'id': user.id,
+                        'username': user.username
+                    }
+                })
+
+            finally:
+                # Delete temp file
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+
+        except Exception as e:
+            return Response(
+                {'success': False, 'message': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class RecentActivityDeleteView(generics.DestroyAPIView):
     queryset = RecentActivity.objects.all()
