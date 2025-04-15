@@ -84,6 +84,16 @@ TEMPLATES = [
         },
     },
 ]
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'onlinetestdb',
+        'USER': 'onlinetestdb_user',
+        'PASSWORD': 'NICyjPzKOQNCsrudeCN10anw8trwExRi',
+        'HOST': 'dpg-cvv2169r0fns73a15p20-a.virginia-postgres.render.com',
+        'PORT': '5432',
+    }
+}
 
 WSGI_APPLICATION = 'Django_project.wsgi.application'
 
@@ -154,7 +164,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Your React frontend URL
+    "http://localhost:3000",
+    "https://onlinetestplatformfrontend.vercel.app",  # Your React frontend URL
     "http://127.0.0.1:3000",
 ]
 
