@@ -24,13 +24,13 @@ const CoverPage = () => {
         const userToken = localStorage.getItem("user_token");
       
         if (uuid) {
-          axios.get(`http://localhost:8000/api/decode-test-uuid/${uuid}/`)
+          axios.get(`https://onlinetestcreationbackend.onrender.com/api/decode-test-uuid/${uuid}/`)
             .then(res => {
               const decodedId = res.data.test_id;
               setTestId(decodedId);
       
               // ✅ Fetch test data only after testId is available
-              return fetch(`http://localhost:8000/api/tests/${decodedId}/`, {
+              return fetch(`https://onlinetestcreationbackend.onrender.com/api/tests/${decodedId}/`, {
                 method: "GET",
                 headers: {
                   "Content-Type": "application/json",
@@ -58,7 +58,7 @@ const CoverPage = () => {
       
     // ✅ Function to navigate to the instruction page
     const handleStartTest = () => {
-        navigate(`/smartbridge/online-test-assessment/${uuid}/cover/`); // Redirects to the instruction page
+        navigate(`/skillbridge/online-test-assessment/${uuid}/cover/`); // Redirects to the instruction page
     };
 
     if (loading) {

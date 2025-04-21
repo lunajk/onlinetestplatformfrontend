@@ -16,7 +16,7 @@ const TestReport = () => {
       try {
         const token = localStorage.getItem("user_token");
         const headers = { Authorization: `Token ${token}` };
-        const response = await axios.get(`http://localhost:8000/api/test-report/${testId}/`, { headers });
+        const response = await axios.get(`https://onlinetestcreationbackend.onrender.com/api/test-report/${testId}/`, { headers });
         setReport(response.data);
       } catch (error) {
         console.error("Error fetching report:", error);

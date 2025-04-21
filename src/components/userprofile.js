@@ -40,7 +40,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('user_token');
 
-  const API_BASE_URL = 'http://127.0.0.1:8000/api';
+  const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
   const USER_PROFILE_URL = `${API_BASE_URL}/users/`;
   const UPLOAD_PROFILE_PICTURE_URL = `${API_BASE_URL}/users/upload_profile_picture/`; // For uploading profile picture
   const CHANGE_PASSWORD_URL = `${API_BASE_URL}/users/change_password/`; // For changing password

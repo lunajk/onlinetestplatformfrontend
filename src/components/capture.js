@@ -178,7 +178,7 @@ const CapturePage = () => {
     formData.append('image', imageBlob, 'capture.jpg');
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/capture/', {
+      const response = await fetch('https://onlinetestcreationbackend.onrender.com/api/capture/', {
         method: 'POST',
         body: formData,
         headers: {

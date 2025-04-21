@@ -13,7 +13,7 @@ const ContactPage = () => {
 // Function to fetch admin notifications
 const fetchAdminNotifications = async () => {
   try {
-    const apiUrl = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+    const apiUrl = process.env.REACT_APP_API_URL || "https://onlinetestcreationbackend.onrender.com";
     
     // Retrieve user_token from localStorage (or wherever you store it after login)
     const userToken = localStorage.getItem("user_token");

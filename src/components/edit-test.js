@@ -28,7 +28,7 @@ import InstagramIcon from "@mui/icons-material/Instagram";
 import MuiAlert from '@mui/material/Alert';
 import logo from "../assets/Image20210206041010-1024x518.png";
 import { useParams } from "react-router-dom"; 
-const API_BASE_URL = "http://localhost:8000/api/questions/";
+const API_BASE_URL = "https://onlinetestcreationbackend.onrender.com/api/questions/";
 
 const EditTestPage = () => {
   const { testId } = useParams(); // Get test ID from the URL
@@ -163,7 +163,7 @@ const EditTestPage = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/tests/${testId}/`, {
+      const response = await axios.get(`https://onlinetestcreationbackend.onrender.com/api/tests/${testId}/`, {
         headers: { Authorization: `Token ${token()}` },
       });
       

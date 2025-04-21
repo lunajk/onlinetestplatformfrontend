@@ -48,7 +48,7 @@ export default function AnnouncementsPage() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const API_BASE_URL = "http://127.0.0.1:8000/api/"; // Ensure your Django URL config is correct
+  const API_BASE_URL = "https://onlinetestcreationbackend.onrender.com/api/"; // Ensure your Django URL config is correct
   const token = localStorage.getItem("user_token");
   const navigate = useNavigate();
 

@@ -76,7 +76,7 @@ const CreateNewTest = () => {
   };
   useEffect(() => {
     if (openSuccessDialog && testId) {
-      axios.get(`http://localhost:8000/api/get-secure-uuid/${testId}/`)
+      axios.get(`https://onlinetestcreationbackend.onrender.com/api/get-secure-uuid/${testId}/`)
 
         .then((res) => {
           const encodedUuid = res.data.encoded_uuid;
@@ -96,7 +96,7 @@ const CreateNewTest = () => {
       }
 
       try {
-        const response = await axios.get("http://localhost:8000/api/questions/", {
+        const response = await axios.get("https://onlinetestcreationbackend.onrender.com/api/questions/", {
           headers: {
             "Authorization": `Token ${userToken}`
           }
@@ -182,7 +182,7 @@ const CreateNewTest = () => {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:8000/api/upload-allowed-emails/", {
+      const response = await fetch("https://onlinetestcreationbackend.onrender.com/api/upload-allowed-emails/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -415,7 +415,7 @@ const CreateNewTest = () => {
 
       // Step 1: Create the test
       const response = await axios.post(
-        "http://localhost:8000/api/tests/",
+        "https://onlinetestcreationbackend.onrender.com/api/tests/",
         testData,
         {
           headers: {
@@ -435,7 +435,7 @@ const CreateNewTest = () => {
         formData.append("test_id", newTestId);
 
         await axios.post(
-          "http://localhost:8000/api/questions/upload/",
+          "https://onlinetestcreationbackend.onrender.com/api/questions/upload/",
           formData,
           {
             headers: {
@@ -478,7 +478,7 @@ const CreateNewTest = () => {
 
         // Make the API call to save the question
         const response = await axios.post(
-          "http://localhost:8000/api/questions/",
+          "https://onlinetestcreationbackend.onrender.com/api/questions/",
           questionData,
           {
             headers: {

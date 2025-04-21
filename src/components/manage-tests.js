@@ -32,7 +32,7 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 import logo from "../assets/Image20210206041010-1024x518.png";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = "http://localhost:8000"; // Base URL
+const API_BASE_URL = "https://onlinetestcreationbackend.onrender.com"; // Base URL
 
 const ManageTestsPage = () => {
   const navigate = useNavigate(); // Get the navigate function
@@ -83,7 +83,7 @@ const ManageTestsPage = () => {
       const userToken = localStorage.getItem("user_token"); // Assuming userToken is stored in localStorage
   
       const response = await axios.post(
-        `http://localhost:8000/api/tests/${selectedTest.id}/duplicate/`,
+        `https://onlinetestcreationbackend.onrender.com/api/tests/${selectedTest.id}/duplicate/`,
         {},
         {
           headers: {
