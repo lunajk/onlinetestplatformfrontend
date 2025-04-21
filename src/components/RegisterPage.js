@@ -19,7 +19,7 @@ import { Lock, AccountCircle } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { useNavigate } from 'react-router-dom';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({ 
