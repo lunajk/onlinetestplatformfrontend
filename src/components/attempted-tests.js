@@ -306,10 +306,7 @@ const sendDataToAttemptedTestsAPI = async (testId, testTitle, testSubject, perce
                 <td style={styles.td}>{test.max_score}</td>
                 <td style={styles.td}>{test.status}</td>
                 <td style={styles.td}>{test.rank}</td>
-                <td style={styles.td}>
-                  <button onClick={() => handleReview(test.id)} style={styles.button}>Review</button>
-                  <button onClick={() => handleExportPDF(test.id)} style={styles.button}>Download Certificate</button>
-                </td>
+
               </tr>
             ))}
           </tbody>

@@ -43,7 +43,7 @@ const App = () => {
     useEffect(() => {
       const userToken = localStorage.getItem("user_token"); // Retrieve the user token from local storage
   
-      fetch("http://localhost:8000/api/tests/", {
+      fetch("https://onlinetestcreationbackend.onrender.com/api/tests/", {
           method: "GET",
           headers: {
               "Authorization": `Token ${userToken}`, // Include the token in the Authorization header
