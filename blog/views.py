@@ -380,7 +380,7 @@ def duplicate_test(request, test_id):
         # Generate a unique test code
         unique_code = str(uuid.uuid4())[:10]  # Generates a short, unique 10-character string
 
-        test_link = f"http://localhost:3000/smartbridge/online-test-assessment/{unique_code}/{new_test.id}/"
+        test_link = f"http://localhost:3000/skillbridge/online-test-assessment/{unique_code}/{new_test.id}/"
 
         return Response({
             "message": "Test duplicated successfully!",
@@ -952,16 +952,20 @@ class QuestionCreateAPIView(APIView):
 class AnnouncementViewSet(viewsets.ModelViewSet):
     queryset = Announcement.objects.all().order_by('-created_at')
     serializer_class = AnnouncementSerializer
-
-    def get_permissions(self):
-        if self.request.method in ['POST', 'DELETE']:
-            return [IsAdminUser()]
-        return [IsAuthenticated()]
+    permission_classes = [IsAuthenticated]  # Applies to all methods
 
     def perform_create(self, serializer):
-        # ✅ Prevent unnecessary multiple saves
-        if not Announcement.objects.filter(title=serializer.validated_data['title'], message=serializer.validated_data['message']).exists():
-            serializer.save()
+        # Log the request user for debugging
+        print("Creating announcement by:", self.request.user)
+
+        # Prevent duplicate announcements by title + message
+        if not Announcement.objects.filter(
+            title=serializer.validated_data['title'],
+            message=serializer.validated_data['message']
+        ).exists():
+            serializer.save(created_by=self.request.user)
+        else:
+            print("Duplicate announcement skipped")
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.select_related('announcement')  # Prefetch related data
