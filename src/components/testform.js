@@ -41,7 +41,7 @@ const PreTestForm = () => {
       });
 
       if (response.ok) {
-        navigate(`https://onlinetestplatformfrontend.vercel.app/smartbridge/online-test-assessment/${uuid}/cover/`);
+        navigate(`/smartbridge/online-test-assessment/${uuid}/cover/`);
       } else {
         const data = await response.json();
         alert(data.message || "You are not allowed to take this test.");

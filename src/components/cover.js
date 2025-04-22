@@ -64,7 +64,7 @@ const CoverPage = () => {
 
   // ✅ Updated navigation to instructions page
   const handleStartTest = () => {
-    navigate(`https://onlinetestplatformfrontend.vercel.app/smartbridge/online-test-assessment/${uuid}/instructions/`);
+    navigate(`/smartbridge/online-test-assessment/${uuid}/instructions/`);
   };
 
   if (loading) {
