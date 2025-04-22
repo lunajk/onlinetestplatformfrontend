@@ -72,7 +72,7 @@ const CreateNewTest = () => {
   };
   useEffect(() => {
     if (openSuccessDialog && testId) {
-        axios.get(`https://onlinetestcreationbackend.onrender.com/api/get-secure-uuid/${testId}/`)
+        axios.get(`http://localhost:8000/api/get-secure-uuid/${testId}/`)
 
         .then((res) => {
           const encodedUuid = res.data.encoded_uuid;
@@ -92,7 +92,7 @@ const CreateNewTest = () => {
       }
 
       try {
-        const response = await axios.get("https://onlinetestcreationbackend.onrender.com/api/questions/", {
+        const response = await axios.get("http://localhost:8000/api/questions/", {
           headers: {
             "Authorization": `Token ${userToken}`
           }
@@ -178,7 +178,7 @@ const CreateNewTest = () => {
     try {
       setLoading(true);
  
-      const response = await fetch("https://onlinetestcreationbackend.onrender.com/api/upload-allowed-emails/", {
+      const response = await fetch("http://localhost:8000/api/upload-allowed-emails/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -411,7 +411,7 @@ const handleSubmit = async () => {
 
         // Step 1: Create the test
         const response = await axios.post(
-            "https://onlinetestcreationbackend.onrender.com/api/tests/",
+            "http://localhost:8000/api/tests/",
             testData,
             {
                 headers: {
@@ -431,7 +431,7 @@ const handleSubmit = async () => {
             formData.append("test_id", newTestId);
 
             await axios.post(
-                "https://onlinetestcreationbackend.onrender.com/api/questions/upload/",
+                "http://localhost:8000/api/questions/upload/",
                 formData,
                 {
                     headers: {
@@ -474,7 +474,7 @@ const handleSubmit = async () => {
    
                 // Make the API call to save the question
                 const response = await axios.post(
-                    "https://onlinetestcreationbackend.onrender.com/api/questions/",
+                    "http://localhost:8000/api/questions/",
                     questionData,
                     {
                         headers: {
