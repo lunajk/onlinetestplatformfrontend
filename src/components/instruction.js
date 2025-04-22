@@ -284,7 +284,7 @@ const InstructionPage = () => {
             body: JSON.stringify(consent)
         })
         .then(() => {
-            navigate(`/skillbridge/online-test-assessment/${randomString}/${testId}/write`);
+            navigate(`https://onlinetestplatformfrontend.vercel.app/smartbridge/online-test-assessment/${randomString}/${testId}/write`);
         })
         .catch(err => {
             console.error("Error saving consent:", err);

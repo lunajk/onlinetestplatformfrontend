@@ -16,7 +16,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
 const steps = ["Test Name & Description", "Question Creation", "Question Bank", "Set Time Limit & Marks", "Set Pass/Fail Criteria", "Settings", "Publish & Share"];
-const BASE_URL = "http://localhost:3000/smartbridge/online-test-assessment/"; // Replace with your actual base URL
+const BASE_URL = "https://onlinetestplatformfrontend.vercel.app/smartbridge/online-test-assessment/"; // Replace with your actual base URL
 const CreateNewTest = () => {
   const [option, setOption] = useState(null);
   const [file, setFile] = useState(null);

@@ -301,7 +301,7 @@ const WebcamProctoring = ({ studentId, testId }) => {
         // Automatically exit the test without alerting the user
         console.log("🚪 Exiting test due to multiple alerts.");
         // Redirect to an exit page or perform any other action
-        window.location.href = "/skillbridge/online-test-assessment/:uuid/exit"; // Example redirect
+        window.location.href = "/smartbridge/online-test-assessment/:uuid/exit"; // Example redirect
     };
 
     useEffect(() => {

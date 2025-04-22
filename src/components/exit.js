@@ -6,7 +6,7 @@ const ProctoringExitPage = () => {
   const navigate = useNavigate();
   const { uuid } = useParams(); // Get test UUID from the URL
 
-  const handleRetake = () => navigate(`/skillbridge/online-test-assessment/${uuid}/cover`);
+  const handleRetake = () => navigate(`https://onlinetestplatformfrontend.vercel.app/skillbridge/online-test-assessment/${uuid}/cover`);
   const handleHome = () => navigate("/dashboard");
   return (
     <>
