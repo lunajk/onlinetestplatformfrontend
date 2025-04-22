@@ -64,7 +64,7 @@ const RegisterPage = () => {
             const response = await axios.post(`${API_BASE_URL}/register/`, formData);
             localStorage.setItem('role', response.data.role); // Store role instead of token
             enqueueSnackbar('Registration successful!', { variant: 'success' });
-            navigate('/LoginPage');
+            navigate('/login');
         } catch (error) {
             console.error('Registration error:', error);
             setErrorMessage('Registration failed. Please check your input.');

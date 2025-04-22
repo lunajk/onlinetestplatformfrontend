@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 import {
   Container,
   Typography,
@@ -7,7 +8,6 @@ import {
   Button,
   CircularProgress,
 } from "@mui/material";
-import API from "./services";
 
 const styles = {
   container: {
@@ -31,7 +31,7 @@ const CoverPage = () => {
     const userToken = localStorage.getItem("user_token");
 
     if (uuid) {
-      API.get(`/api/decode-test-uuid/${uuid}/`)
+        axios.get(`https://onlinetestcreationbackend.onrender.com/api/decode-test-uuid/${uuid}/`)
         .then(res => {
           const decodedId = res.data.test_id;
           setTestId(decodedId);

@@ -251,19 +251,17 @@ const Profile = () => {
             {/* Admin-specific options */}
             {userData && userData.role === 'admin' && (
               <>
-                <ListItem button onClick={() => navigate('/create-test')}>
-                  <ListItemText primary="Create a Test" />
+                <ListItem button onClick={() => navigate('/testcreation')}>
+                  <ListItemText primary="Test Creation" />
                 </ListItem>
                 <ListItem button onClick={() => navigate('/manage-tests')}>
                   <ListItemText primary="Manage Tests" />
                 </ListItem>
-                <ListItem button onClick={() => navigate('/test-analytics')}>
-                  <ListItemText primary="Test Analytics" />
-                </ListItem>
+
               </>
             )}
-            <ListItem button onClick={() => navigate('/settings')}>
-              <ListItemText primary="Settings" />
+            <ListItem button onClick={() => navigate('/adminsettings')}>
+              <ListItemText primary="Admin Settings" />
             </ListItem>
             <ListItem button onClick={handleLogout}>
               <ListItemText primary="Logout" />

@@ -61,7 +61,7 @@ const HomePage = () => {
    
 
     axios
-      .get("http://localhost:8000/api/performers/")
+      .get("https://onlinetestcreationbackend.onrender.com/api/performers/")
       .then((response) => {
         setPerformers(response.data);
       })
@@ -70,7 +70,7 @@ const HomePage = () => {
       });
 
     axios
-      .get("http://localhost:8000/api/features/")
+      .get("https://onlinetestcreationbackend.onrender.com/api/features/")
       .then((response) => {
         setFeatures(response.data);
       })
@@ -80,7 +80,7 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/api/testimonials/")
+    axios.get("https://onlinetestcreationbackend.onrender.com/api/testimonials/")
       .then(response => setTestimonials(response.data))
       .catch(error => console.error("Error fetching testimonials:", error));
   }, []);
@@ -110,7 +110,7 @@ const HomePage = () => {
   const HeroSection = () => (
     <Box sx={{ backgroundColor: "#006699", padding: "42px 16px", textAlign: "center" }}>
       <Typography variant="h2" color="white">
-        Welcome to SmartBridge Online Test Platform
+        Welcome to Skill Bridge Online Test Platform
       </Typography>
       <Typography variant="h4" color="white" sx={{ marginTop: "16px" }}>
         Explore a variety of tests across categories and track your progress!

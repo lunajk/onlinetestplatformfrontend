@@ -269,7 +269,7 @@ const onClose = () => {
           <List>
             <ListItem button onClick={() => navigate('/user-dashboard')}><ListItemText primary="Dashboard" /></ListItem>
             <ListItem button onClick={() => navigate('/attempted-tests')}><ListItemText primary="Attempted Tests" /></ListItem>
-            <ListItem button onClick={() => navigate('/Testcreation')}><ListItemText primary="TestCreation" /></ListItem>
+            <ListItem button onClick={() => navigate('/Testcreation')}><ListItemText primary="Test Creation" /></ListItem>
             <ListItem button onClick={() => navigate('/performancehistory')}><ListItemText primary="Performance History" /></ListItem>
 
             <ListItem button onClick={() => navigate('/usersetting')}><ListItemText primary="Settings" /></ListItem>
