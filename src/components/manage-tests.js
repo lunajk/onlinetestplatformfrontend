@@ -177,7 +177,7 @@ const ManageTestsPage = () => {
             <ListItem button onClick={() => navigate("/manage-tests")}>
               <ListItemText primary="Manage Tests" />
             </ListItem>
-            <ListItem button onClick={() => navigate("/announcements")}>
+            <ListItem button onClick={() => navigate("/announcement")}>
               <ListItemText primary="Announcements" />
             </ListItem>
             <ListItem button onClick={() => navigate("/adminsettings")}>

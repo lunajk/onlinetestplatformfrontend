@@ -624,7 +624,7 @@ const AdminDashboard = () => {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              
             </PieChart>
           ) : (
             <Typography sx={{ color: "gray", fontSize: "14px", textAlign: "center" }}>
