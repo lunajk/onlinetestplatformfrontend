@@ -1665,6 +1665,10 @@ class UserAnswerViewSet(viewsets.ModelViewSet):
             )
 
         return Response({"message": "Answers saved successfully"}, status=status.HTTP_201_CREATED)
+    
+import re
+from PyPDF2 import PdfReader
+
 class UploadQuestionsView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
@@ -1698,20 +1702,57 @@ class UploadQuestionsView(APIView):
                     return Response({'error': f"Failed to process row: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
         elif file.name.endswith('.pdf'):
-            pdf_reader = PyPDF2.PdfReader(file)
+            pdf_reader = PdfReader(file)
+            full_text = ''
             for page in pdf_reader.pages:
-                text = page.extract_text()
-                # This is just a placeholder; real parsing would require a custom logic
-                if text.strip():
-                    Question.objects.create(
-                        test=test,
-                        text=text.strip(),
-                        type='fillintheblank',  # Default type
-                        options=[],
-                        correct_answer=[]
+                full_text += page.extract_text() + '\n'
+                question_blocks = full_text.strip().split('\n\n')
+            for block in question_blocks:
+                lines = block.strip().split('\n')
+                if not lines:
+                    continue
+                question_text = lines[0].strip()
+                options = []
+                correct_answer = []
+                answer_line = None
+            for i, line in enumerate(lines):
+                if line.lower().startswith('answer:'):
+                    answer_line = line
+                    lines.pop(i)
+                    break
+            for line in lines[1:]:
+                match = re.match(r'^(\d+)\.\s*(.+)', line.strip())
+                if match:
+                    options.append(match.group(2).strip())
+            if '____' in question_text or '__________' in question_text:
+                q_type = 'fillintheblank'
+                if answer_line:
+                    correct_answer = [answer_line.split(':', 1)[1].strip()]
+                elif len(options) == 2 and set(opt.lower() for opt in options) == {"true", "false"}:
+                    q_type = 'truefalse'
+                    if answer_line:
+                        correct_answer = [options[int(answer_line.split(':', 1)[1].strip()) - 1]]
+                elif answer_line and ',' in answer_line:
+                    q_type = 'multipleresponse'
+                    indices = [int(i.strip()) - 1 for i in answer_line.split(':', 1)[1].split(',')]
+                    correct_answer = [options[i] for i in indices if 0 <= i < len(options)]
+                elif options:
+                    q_type = 'multiplechoice'
+                    if answer_line:
+                        idx = int(answer_line.split(':', 1)[1].strip()) - 1
+                        if 0 <= idx < len(options):
+                            correct_answer = [options[idx]]
+                else:
+                    q_type = 'fillintheblank'
+                Question.objects.create(
+                    test=test,
+                    text=question_text,
+                    type=q_type,
+                    options=options,
+                     correct_answer=correct_answer
                     )
+           
         else:
             return Response({'error': 'Unsupported file type. Only .csv and .pdf allowed.'}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'message': 'Questions imported successfully'}, status=status.HTTP_201_CREATED)
-
