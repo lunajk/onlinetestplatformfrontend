@@ -260,6 +260,9 @@ const Profile = () => {
                 </ListItem>
               </>
             )}
+              <ListItem button onClick={() => navigate('/announcement')}>
+                        <ListItemText primary="Announcements" />
+                      </ListItem>
             <ListItem button onClick={() => navigate('/adminsettings')}>
               <ListItemText primary="Admin Settings" />
             </ListItem>

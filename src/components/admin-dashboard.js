@@ -11,7 +11,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
-import logo from "../assets/Image20210206041010-1024x518.png";
+import logo from "../assets/Image20250320122406.png";
 import { Bar } from "react-chartjs-2";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import "chart.js/auto"; // Automatically register all components

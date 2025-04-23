@@ -1,1871 +1,790 @@
-import React, { useState, useEffect } from "react";
-import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { Typography, Stepper, CardContent, Card, Fade, Alert, Input, Stack, Switch, Step, StepLabel, Button, TextField, Checkbox, FormControlLabel, Paper, Box, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, IconButton, Drawer, Toolbar, List, ListItem, ListItemText, AppBar, Tooltip } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import { Form, useNavigate } from "react-router-dom";
-import DeleteIcon from "@mui/icons-material/Delete";
-import axios from "axios";
-import TwitterIcon from '@mui/icons-material/Twitter';
-import Papa from "papaparse";
-import ImportQuestionsModal from './ImportQuestionModal';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import InstagramIcon from '@mui/icons-material/Instagram';
-import ContentCopy from '@mui/icons-material/ContentCopy';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DescriptionIcon from '@mui/icons-material/Description';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ContactMailIcon from '@mui/icons-material/ContactMail';
-const steps = ["Test Name & Description", "Question Creation", "Question Bank", "Set Time Limit & Marks", "Set Pass/Fail Criteria", "Settings", "Publish & Share"];
-const BASE_URL = "https://onlinetestplatformfrontend.vercel.app/smartbridge/online-test-assessment/"; // Replace with your actual base URL
-const CreateNewTest = () => {
-  const [option, setOption] = useState(null);
-  const [file, setFile] = useState(null);
-  const [allowRetakes, setAllowRetakes] = useState(false); // Default: false
-  const [numberOfRetakes, setNumberOfRetakes] = useState(0); // Default: 0
-  const [startDate, setStartDate] = useState("");  // Default empty
-  const [modalOpen, setModalOpen] = useState(false);
-  const [IsPublic, setIsPublic] = useState(false);
-  const [endDate, setEndDate] = useState("");  // Default empty
-  const [dueTime, setDueTime] = useState("");  // Default empty
-  const [timeLimitPerQuestion, setTimeLimitPerQuestion] = useState(0); // Add this line
-  const [fetchedQuestions, setFetchedQuestions] = useState([]); // State to hold fetched questions
-  const [testId, setTestId] = useState(null);
-  const [category, setCategory] = useState(1);// Unique Test Id
-  const [activeStep, setActiveStep] = useState(0);
-  const [openCSVModal, setOpenCSVModal] = useState(false);
-  const [emailList, setEmailList] = useState([]);
-  const [importTestId, setImportTestId] = useState(null);
-  const [uploadType, setUploadType] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [success, setSuccess] = useState(null);
-  const [error, setError] = useState(null);
-  const [selectedQuestions, setSelectedQuestions] = useState([]);
-  const [instructions, setInstructions] = useState(""); // For the introduction text
-  const [conclusion, setConclusion] = useState(""); // For the conclusion text
-  const [testName, setTestName] = useState("");
-  const [randomizeOrder, setRandomizeOrder] = useState(false);
-  const [allowBlankAnswers, setAllowBlankAnswers] = useState(false);
-  const [penalizeIncorrectAnswers, setPenalizeIncorrectAnswers] = useState(false);
-  const [allowJumpAround, setAllowJumpAround] = useState(false);
-  const [onlyMoveForward, setOnlyMoveForward] = useState(false);
-  const [disableRightClick, setDisableRightClick] = useState(false);
-  const [disableCopyPaste, setDisableCopyPaste] = useState(false);
-  const [disableTranslate, setDisableTranslate] = useState(false);
-  const [disableAutocomplete, setDisableAutocomplete] = useState(false);
-  const [disableSpellcheck, setDisableSpellcheck] = useState(false);
-  const [disablePrinting, setDisablePrinting] = useState(false);
-  const [receiveEmailNotifications, setReceiveEmailNotifications] = useState(false);
-  const [notificationEmails, setNotificationEmails] = useState('');
-  const [subject, setSubject] = useState(""); // Assuming you have a way to select subjects
-  const [difficulty, setDifficulty] = useState(""); // Assuming you have a way to select difficulty
-  const [owner] = useState(Number(localStorage.getItem("owner")) || 1); // Hardcoded owner name for testing
-  const [testDescription, setTestDescription] = useState("");
-  const [marksPerQuestion, setMarksPerQuestion] = useState(1); // Marks per question
-  const [totalQuestions, setTotalQuestions] = useState(0); // Total questions
-  const [totalMarks, setTotalMarks] = useState(0); // Total marks
-  const [passCriteria, setPassCriteria] = useState();
-  const [openSuccessDialog, setOpenSuccessDialog] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [questions, setQuestions] = useState([]);
-  const [testLink, setTestLink] = useState("");
-  const [newOption, setNewOption] = useState("");
-  const navigate = useNavigate();
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-  useEffect(() => {
-    if (openSuccessDialog && testId) {
-      axios.get(`https://onlinetestcreationbackend.onrender.com/api/get-secure-uuid/${testId}/`)
-
-        .then((res) => {
-          const encodedUuid = res.data.encoded_uuid;
-          setTestLink(`${BASE_URL}/${encodedUuid}`);
-        })
-        .catch((err) => {
-          console.error("Failed to fetch secure test UUID", err);
-        });
-    }
-  }, [openSuccessDialog, testId]);
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      const userToken = localStorage.getItem("user_token");
-      if (!userToken) {
-        console.error("No user token found");
-        return;
-      }
-
-      try {
-        const response = await axios.get("https://onlinetestcreationbackend.onrender.com/api/questions/", {
-          headers: {
-            "Authorization": `Token ${userToken}`
-          }
-        });
-        setFetchedQuestions(response.data);
-      } catch (error) {
-        console.error("Error fetching questions:", error);
-      }
-    };
-
-    fetchQuestions();
-  }, []);
-
-  const handleCloseImportModal = () => setModalOpen(false);
-  const handleCorrectAnswersChange = (qIndex, optionIndex) => {
-    const updatedQuestions = [...questions];
-    let correctAnswers = updatedQuestions[qIndex].correctAnswers || [];
-
-    const optionValue = updatedQuestions[qIndex].options[optionIndex]; // Get the actual option text
-
-    if (correctAnswers.includes(optionValue)) {
-      // Remove answer if already selected
-      correctAnswers = correctAnswers.filter(answer => answer !== optionValue);
-    } else {
-      // Add the answer text
-      correctAnswers.push(optionValue);
-    }
-
-    updatedQuestions[qIndex].correctAnswers = correctAnswers; // Store values, not indexes
-    setQuestions(updatedQuestions);
-  };
-
-  const handleNext = async () => {
-    // Check if all required fields are filled in case 0
-    if (activeStep === 0) {
-      if (!testName || !testDescription || !category || !subject || !difficulty) {
-        alert("Please fill in all fields before proceeding.");
-        return;
-      }
-    }
-
-    // Check if there are questions before moving to the next step
-    if (activeStep === 1) {
-      if (questions.length === 0) {
-        alert("Please create at least one question before proceeding.");
-        return;
-      }
-    }
-
-    // Proceed to the next step
-    if (activeStep === steps.length - 1) {
-      setLoading(true);
-      await handleSubmit();
-      setOpenSuccessDialog(true);
-    } else {
-      setActiveStep((prevStep) => prevStep + 1);
-    }
-  };
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert("Test link copied!");
-  };
-  const handleCSVUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      Papa.parse(file, {
-        complete: (results) => {
-          const emails = results.data
-            .map((row) => row[0]?.trim())
-            .filter((email) => email && /\S+@\S+\.\S+/.test(email)); // Basic email check
-          setEmailList(emails);
-        },
-      });
-    }
-  };
-
-  const handleSaveAndSendEmails = async () => {
-    if (!testId || emailList.length === 0) {
-      alert("Please upload a valid CSV and ensure test ID is set.");
-      return;
-    }
-    const userToken = localStorage.getItem("user_token");
-    try {
-      setLoading(true);
-
-      const response = await fetch("https://onlinetestcreationbackend.onrender.com/api/upload-allowed-emails/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Token ${userToken}` // ✅ If you’re using token-based auth
-        },
-        body: JSON.stringify({
-          test_id: testId,
-          emails: emailList
-        })
-      });
-
-      const data = await response.json();
-      console.log("✅ Email upload response:", data);
-
-      if (response.ok) {
-        alert("Emails uploaded and invitations sent!");
-      } else {
-        console.error("❌ Upload failed:", data);
-        alert(data.error || "Failed to send emails.");
-      }
-    } catch (error) {
-      console.error("❌ Error sending emails:", error);
-      alert("An unexpected error occurred.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1);
-  };
-
-  const addTrueFalseQuestion = () => {
-    setQuestions([
-      ...questions,
-      { type: "truefalse", text: "Is this statement true or false?", correctAnswer: null },
-    ]);
-    setTotalQuestions(totalQuestions + 1);
-    setTotalMarks(totalQuestions + 1 * marksPerQuestion);
-  };
-
-  const addMultipleChoiceQuestion = () => {
-    setQuestions([
-      ...questions,
-      { type: "multiplechoice", text: "", options: ["", "", "", ""], correctAnswer: "" }, // Initialize as an empty string
-    ]);
-  };
-  const addFillInTheBlankQuestion = () => {
-    setQuestions([
-      ...questions,
-      { type: "fillintheblank", text: "____ is the capital of France.", correctAnswer: "" },
-    ]);
-    setTotalQuestions(totalQuestions + 1);
-    setTotalMarks(totalQuestions + 1 * marksPerQuestion);
-  };
-
-  const addMultipleResponseQuestion = () => {
-    setQuestions([
-      ...questions,
-      { type: "multipleresponse", text: "", options: ["", "", "", ""], correctAnswers: [] }, // Initialize as an empty array
-    ]);
-  };
-  const handleQuestionTextChange = (index, value) => {
-    const newQuestions = [...questions];
-    newQuestions[index].text = value;
-    setQuestions(newQuestions);
-  };
-  const handleLogout = () => { // Clear any stored authentication data, tokens, etc.
-    localStorage.removeItem("user_token"); // Example: Remove an auth token
-    alert("You have been logged out.");
-    navigate("/login");
-  };
-  const handleOptionChange = (qIndex, optionIndex, value) => {
-    const newQuestions = [...questions];
-    if (value === "") {
-      newQuestions[qIndex].options = newQuestions[qIndex].options.filter((_, index) => index !== optionIndex);
-    } else {
-      newQuestions[qIndex].options[optionIndex] = value;
-    }
-    setQuestions(newQuestions);
-  };
-  const handleCorrectAnswerChange = (qIndex, value) => {
-    // Create a copy of the current questions state
-    const updatedQuestions = [...questions];
-
-    // Check if the question exists
-    if (updatedQuestions[qIndex]) {
-      const questionType = updatedQuestions[qIndex].type;
-
-      if (questionType === "multiplechoice") {
-        // For multiple choice, value should be the option string
-        const selectedOption = updatedQuestions[qIndex].options[value]; // value is the index
-        updatedQuestions[qIndex].correctAnswer = selectedOption; // Store the option string
-      } else if (questionType === "truefalse") {
-        // For true/false, value should be a boolean
-        updatedQuestions[qIndex].correctAnswer = value; // Store the boolean value
-      }
-
-      setQuestions(updatedQuestions); // Update the state with the new questions array
-      console.log(`Question ${qIndex}, Selected Answer: ${updatedQuestions[qIndex].correctAnswer}`); // Log the selected answer
-    } else {
-      console.error(`Question at index ${qIndex} does not exist.`);
-    }
-  };
-  const handleCorrectAnswerChanges = (qIndex, optionIndex) => {
-    console.log(`Question ${qIndex}, Selected Option: ${optionIndex}`);
-    const updatedQuestions = [...questions];
-    let correctAnswers = updatedQuestions[qIndex].correct_answers || [];
-
-    const optionValue = updatedQuestions[qIndex].options[optionIndex];  // ✅ Get answer text
-
-    if (correctAnswers.includes(optionValue)) {
-      // Remove answer if already selected
-      correctAnswers = correctAnswers.filter(answer => answer !== optionValue);
-    } else {
-      // Add the answer text
-      correctAnswers.push(optionValue);
-    }
-
-    updatedQuestions[qIndex].correct_answers = correctAnswers;  // ✅ Store values, not indexes
-    setQuestions(updatedQuestions);
-  };
-
-  const handleQuestionSelect = (question) => {
-    setSelectedQuestions((prevQuestions) => {
-      const isAlreadySelected = prevQuestions.some(q => q.id === question.id);
-      if (isAlreadySelected) {
-        return prevQuestions.filter(q => q.id !== question.id);
-      } else {
-        return [...prevQuestions, question];
-      }
-    });
-  };
-  const handleFillInTheBlankAnswerChange = (qIndex, value) => {
-    const newQuestions = [...questions];
-    newQuestions[qIndex].correctAnswer = value;
-    setQuestions(newQuestions);
-  };
-  const handleAddOption = (qIndex) => {
-    const updatedQuestions = [...questions];
-    updatedQuestions[qIndex].options.push(newOption);
-    setQuestions(updatedQuestions);
-    setNewOption(""); // Reset input field
-  };
-
-  const handleRemoveQuestion = (qIndex) => {
-    const updatedQuestions = questions.filter((_, index) => index !== qIndex);
-    setQuestions(updatedQuestions);
-    setTotalQuestions(totalQuestions - 1);
-    setTotalMarks(totalQuestions - 1 * marksPerQuestion);
-  };
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setSuccess(null);
-    setError(null);
-  };
-
-  const handleSubmit = async () => {
-    const userToken = localStorage.getItem("user_token");
-    setLoading(true);
-
-    try {
-      const totalQuestionsCount = questions.length + selectedQuestions.length;
-      const totalTimeLimit = totalQuestionsCount * timeLimitPerQuestion;
-
-      const testData = {
-        title: testName,
-        description: testDescription,
-        category,
-        max_score: totalQuestionsCount * marksPerQuestion,
-        total_marks: totalQuestionsCount * marksPerQuestion,
-        subject,
-        difficulty,
-        owner,
-        time_limit_per_question: timeLimitPerQuestion,
-        total_time_limit: totalTimeLimit / 60,
-        marks_per_question: marksPerQuestion,
-        pass_criteria: passCriteria,
-        instructions,
-        conclusion,
-        scheduled_date: null,
-        is_public: IsPublic,
-        allow_retakes: allowRetakes,
-        number_of_retakes: numberOfRetakes,
-        randomize_order: false,
-        allow_blank_answers: false,
-        penalize_incorrect_answers: false,
-        allow_jump_around: false,
-        only_move_forward: false,
-        indicate_correctness: false,
-        display_correct_answer: false,
-        show_explanation: false,
-        move_on_without_feedback: false,
-        show_score: false,
-        show_test_outline: false,
-        disable_right_click: false,
-        disable_copy_paste: false,
-        disable_translate: false,
-        disable_autocomplete: false,
-        disable_spellcheck: false,
-        disable_printing: false,
-        receive_email_notifications: receiveEmailNotifications,
-        notification_emails: notificationEmails,
-        start_date: startDate || null,
-        end_date: endDate || null,
-        due_time: dueTime || null,
-        status: "published",
-        rank: 1,
-        questions: [
-          ...questions.map((question) => ({
-            text: question.text,
-            type: question.type,
-            options: question.options ?? [],
-            correct_answer:
-              question.type === "multipleresponse"
-                ? question.correctAnswers
-                : question.correctAnswer ?? "N/A",
-          })),
-          ...selectedQuestions.map((question) => ({
-            text: question.text,
-            type: question.type,
-            options: question.options ?? [],
-            correct_answer:
-              question.type === "multipleresponse"
-                ? question.correctAnswers
-                : question.correctAnswer ?? "N/A",
-          })),
-        ],
-      };
-
-      // Step 1: Create the test
-      const response = await axios.post(
-        "https://onlinetestcreationbackend.onrender.com/api/tests/",
-        testData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Token ${userToken}`,
-          },
-        }
-      );
-
-      const newTestId = response.data.id;
-      setTestId(newTestId); // Save test ID to state
-
-      // Step 2: Upload file if selected
-      if (file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("test_id", newTestId);
-
-        await axios.post(
-          "https://onlinetestcreationbackend.onrender.com/api/questions/upload/",
-          formData,
-          {
-            headers: {
-              Authorization: `Token ${userToken}`,
-            },
-          }
-        );
-      }
-
-      setSuccess("Test and questions uploaded successfully!");
-      setFile(null); // Clear file
-      setOpenSuccessDialog(true);
-    } catch (error) {
-      console.error("Error creating test or uploading questions:", error);
-      setError(error.response?.data?.error || "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveQuestions = async (createdTestId) => {
-    const userToken = localStorage.getItem("user_token");
-
-    try {
-      for (const question of questions) {
-        // Ensure options are provided and not empty
-        const questionData = {
-          text: question.text,
-          type: question.type,
-          options: question.options, // Ensure options is an array
-          correct_answer: question.type === "multipleresponse" ? question.correctAnswers : question.correctAnswer,
-          test: createdTestId // Associate the question with the test
-        };
-
-        // Check if the question type requires options
-        if ((question.type === "multiplechoice" || question.type === "multipleresponse") && questionData.options.length === 0) {
-          alert("Please provide options for the question.");
-          return; // Prevent saving if options are missing
-        }
-
-        // Make the API call to save the question
-        const response = await axios.post(
-          "https://onlinetestcreationbackend.onrender.com/api/questions/",
-          questionData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Token ${userToken}` // Include the token in the header
-            },
-          }
-        );
-
-        console.log("Question saved:", response.data); // Debugging log
-      }
-      alert("Questions saved successfully!"); // Feedback to the user
-    } catch (error) {
-      if (error.response) {
-        console.error("Submission failed:", error.response.data);
-        alert(`Error: ${JSON.stringify(error.response.data)}`); // Log the error response
-      } else {
-        console.error("Submission failed:", error.message);
-        alert("Error: Unable to connect to the server.");
-      }
-    }
-  };
-
-  const renderStepContent = (step) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <TextField
-              label="Test Name"
-              fullWidth
-              value={testName}
-              onChange={(e) => setTestName(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              label="Test Description"
-              fullWidth
-              rows={2}
-              value={testDescription}
-              onChange={(e) => setTestDescription(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <FormControl fullWidth sx={{ mb: 2 }} required>
-              <InputLabel id="category-label">Category</InputLabel>
-              <Select
-                labelId="category-label"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                label="Category"
-              >
-                <MenuItem value="math">Math</MenuItem>
-                <MenuItem value="science">Science</MenuItem>
-                <MenuItem value="history">History</MenuItem>
-                <MenuItem value="literature">Literature</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              label="Subject"
-              fullWidth
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <FormControl fullWidth sx={{ mb: 2 }} required>
-              <InputLabel id="difficulty-label">Difficulty</InputLabel>
-              <Select
-                labelId="difficulty-label"
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                label="Difficulty"
-              >
-                <MenuItem value="easy">Easy</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="hard">Hard</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        );
-      case 1:
-        return (
-          <Box sx={{
-            mt: 4,
-            maxWidth: 800,
-            mx: "auto",
-            p: 3,
-            backgroundColor: "#fff",
-            borderRadius: 4,
-            boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-            transition: "transform 0.3s ease, box-shadow 0.3s ease",
-            "&:hover": {
-              transform: "translateY(-5px)",
-              boxShadow: "0 12px 24px rgba(0,0,0,0.2)"
-            }
-          }}>
-            <Typography variant="h4" sx={{
-              mb: 3,
-              textAlign: "center",
-              fontWeight: "bold",
-              color: "#333",
-              background: "linear-gradient(45deg, #00796b, #004d40)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent"
-            }}>
-              Create Questions
-            </Typography>
-            <form onSubmit={saveQuestions}> {/* Change here */}
-              {questions.map((question, qIndex) => (
-                <div key={qIndex} className="question-group" sx={{
-                  mb: 3,
-                  backgroundColor: "#f9f9f9",
-                  padding: 3,
-                  borderRadius: 2,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
-                    transform: "scale(1.02)"
-                  }
-                }}>
-                  <div className="question-content" sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}>
-                    <div className="question-number" style={{
-                      fontWeight: "bold",
-                      color: "#00796b",
-                      fontSize: "18px",
-                      background: "#e0f7fa",
-                      padding: "8px 12px",
-                      borderRadius: "50%",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-                    }}>
-                      {qIndex + 1}.
-                    </div>
-                    <textarea
-                      value={question.text}
-                      onChange={(e) => handleQuestionTextChange(qIndex, e.target.value)}
-                      placeholder={`Enter the question ${qIndex + 1} here`}
-                      required
-                      rows="2"
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "16px",
-                        borderRadius: "8px",
-                        border: "1px solid #ddd",
-                        marginTop: "8px",
-                        marginBottom: "16px",
-                        backgroundColor: "#fafafa",
-                        transition: "border-color 0.3s, box-shadow 0.3s",
-                        "&:focus": {
-                          borderColor: "#00796b",
-                          boxShadow: "0 0 8px rgba(0,121,107,0.3)"
-                        }
-                      }}
-                      onFocus={(e) => (e.target.style.borderColor = "#00796b")}
-                      onBlur={(e) => (e.target.style.borderColor = "#ddd")}
-                    />
-                  </div>
-                  {question.type === "multiplechoice" && (
-                    <>
-                      {question.options.map((option, optionIndex) => (
-                        <div key={optionIndex} className="option-group" sx={{
-                          mb: 2,
-                          padding: 2,
-                          backgroundColor: "#fff",
-                          borderRadius: 1,
-                          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                          transition: "all 0.3s ease",
-                          "&:hover": {
-                            boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
-                          }
-                        }}>
-                          <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
-                            <input
-                              type="radio"
-                              name={`correct_answer-${qIndex}`}
-                              checked={question.correctAnswer === option} // Check if the correct answer is the option string
-                              onChange={() => handleCorrectAnswerChange(qIndex, optionIndex)} // Pass the index
-                              style={{
-                                marginRight: "12px",
-                                transform: "scale(1.2)",
-                                transition: "transform 0.2s",
-                                cursor: "pointer"
-                              }}
-                              onMouseOver={(e) => (e.target.style.transform = "scale(1.3)")}
-                              onMouseOut={(e) => (e.target.style.transform = "scale(1.2)")}
-                            />
-                            <input
-                              type="text"
-                              value={option || ""}
-                              onChange={(e) => handleOptionChange(qIndex, optionIndex, e.target.value)} // Update option text
-                              placeholder={`Option ${optionIndex + 1}`}
-                              required
-                              style={{
-                                padding: "10px",
-                                width: "80%",
-                                fontSize: "14px",
-                                marginLeft: "12px",
-                                borderRadius: "8px",
-                                border: "1px solid #ccc",
-                                backgroundColor: "#fafafa",
-                                transition: "border 0.3s, box-shadow 0.3s",
-                              }}
-                              onFocus={(e) => (e.target.style.borderColor = "#00796b")}
-                              onBlur={(e) => (e.target.style.borderColor = "#ccc")}
-                            />
-                          </label>
-                        </div>
-                      ))}
-
-
-                      <div className="add-option-group" sx={{ display: "flex", justifyContent: "space-between" }}>
-                        <input
-                          type="text"
-                          value={newOption}
-                          placeholder="Add another option"
-                          onChange={(e) => setNewOption(e.target.value)}
-                          style={{
-                            width: "80%",
-                            padding: "10px",
-                            fontSize: "14px",
-                            borderRadius: "8px",
-                            border: "1px solid #ccc",
-                            backgroundColor: "#e0f7fa",
-                            cursor: "pointer",
-                          }}
-                        />
-                        <Button onClick={() => handleAddOption(qIndex)}>Add</Button>
-                        <IconButton
-                          onClick={() => handleRemoveQuestion(qIndex)}
-                          sx={{
-                            color: "#d32f2f",
-                            "&:hover": {
-                              backgroundColor: "#f8d7da",
-                            },
-                            borderRadius: "50%",
-                            padding: "8px",
-                          }}
-                          title="Remove question"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </div>
-
-                      {/* Correct Answer Input */}
-                      <div style={{ marginTop: "16px" }}>
-                        <label style={{ fontSize: "14px", fontWeight: "bold" }}>Correct Answer:</label>
-                        <input
-                          type="text"
-                          value={question.options[question.correctAnswer] || ""}
-                          onChange={(e) => handleCorrectAnswerChange(qIndex, question.options.indexOf(e.target.value))}
-                          placeholder="Type the correct answer here"
-                          style={{
-                            padding: "10px",
-                            width: "100%",
-                            fontSize: "14px",
-                            borderRadius: "8px",
-                            border: "1px solid #ccc",
-                            backgroundColor: "#fafafa",
-                            transition: "border 0.3s, box-shadow 0.3s",
-                            marginTop: "8px"
-                          }}
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  {question.type === "multipleresponse" && (
-                    <>
-                      {question.options.map((option, optionIndex) => (
-                        <div key={optionIndex} className="form-group" sx={{ mb: 2 }}>
-                          <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
-                            <input
-                              type="checkbox"
-                              checked={question.correctAnswers.includes(option)} // Check if the current option is in the correctAnswers array
-                              onChange={() => handleCorrectAnswersChange(qIndex, optionIndex)} // Update correct answers
-                              style={{ marginRight: "12px", transform: "scale(1.2)" }}
-                            />
-                            <input
-                              type="text"
-                              value={option || ""}
-                              onChange={(e) => handleOptionChange(qIndex, optionIndex, e.target.value)}
-                              placeholder={`Option ${optionIndex + 1}`}
-                              style={{ fontSize: "14px", padding: "6px", width: "100%", maxWidth: "300px" }}
-                              required
-                            />
-                          </label>
-                        </div>
-                      ))}
-
-
-                      {/* Add new option input */}
-                      <div className="add-option-group" style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                        <input
-                          type="text"
-                          className="custom-input"
-                          value={newOption}
-                          placeholder="Add another option"
-                          onChange={(e) => setNewOption(e.target.value)}
-                          style={{
-                            fontSize: "14px",
-                            padding: "6px 12px",
-                            border: "1px solid #ccc",
-                            borderRadius: "20px",
-                            cursor: "pointer",
-                            width: "100%",
-                            maxWidth: "200px",
-                          }}
-                        />
-                        <IconButton
-                          onClick={() => handleRemoveQuestion(qIndex)}
-                          sx={{
-                            color: "#d32f2f",
-                            "&:hover": {
-                              backgroundColor: "#f8d7da",
-                            },
-                            borderRadius: "50%",
-                            padding: "8px",
-                          }}
-                          title="Remove question"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </div>
-
-                      {/* Correct Answer Input */}
-                      <div style={{ marginTop: "16px" }}>
-                        <label style={{ fontSize: "14px", fontWeight: "bold" }}>Correct Answers:</label>
-                        <input
-                          type="text"
-                          value={question.correctAnswers.map(index => question.options[index]).join(", ")} // Display correct answers as option texts
-                          onChange={(e) => {
-                            const answers = e.target.value.split(",").map(item => item.trim());
-                            const correctAnswerIndices = answers.map(answer => question.options.indexOf(answer)).filter(index => index !== -1);
-                            handleCorrectAnswersChange(qIndex, correctAnswerIndices); // Update correct answers
-                          }}
-                          placeholder="Type the correct answers here (comma separated)"
-                          style={{
-                            padding: "10px",
-                            width: "100%",
-                            fontSize: "14px",
-                            borderRadius: "8px",
-                            border: "1px solid #ccc",
-                            backgroundColor: "#fafafa",
-                            transition: "border 0.3s, box-shadow 0.3s",
-                            marginTop: "8px"
-                          }}
-                        />
-                      </div>
-                    </>
-                  )}
-                  {question.type === "truefalse" && (
-                    <>
-                      <div className="form-group" sx={{ mb: 2 }}>
-                        <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
-                          <input
-                            type="radio"
-                            name={`correct_answer-${qIndex}`}
-                            value={true} // Set value to true
-                            checked={question.correctAnswer === true} // Check if the correct answer is true
-                            onChange={() => handleCorrectAnswerChange(qIndex, true)} // Pass true
-                            style={{ marginRight: "12px", transform: "scale(1.2)" }}
-                          />
-                          True
-                        </label>
-                        <br />
-                        <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
-                          <input
-                            type="radio"
-                            name={`correct_answer-${qIndex}`}
-                            value={false} // Set value to false
-                            checked={question.correctAnswer === false} // Check if the correct answer is false
-                            onChange={() => handleCorrectAnswerChange(qIndex, false)} // Pass false
-                            style={{ marginRight: "12px", transform: "scale(1.2)" }}
-                          />
-                          False
-                        </label>
-                      </div>
-
-                      {/* Correct Answer Input */}
-                      <div style={{ marginTop: "16px" }}>
-                        <label style={{ fontSize: "14px", fontWeight: "bold" }}>Correct Answer:</label>
-                        <input
-                          type="text"
-                          value={question.correctAnswer ? "True" : "False"} // Display the correct answer as text
-                          onChange={(e) => {
-                            const value = e.target.value.trim().toLowerCase();
-                            handleCorrectAnswerChange(qIndex, value === "true"); // Update correct answer based on input
-                          }}
-                          placeholder="Type the correct answer here (True/False)"
-                          style={{
-                            padding: "10px",
-                            width: "100%",
-                            fontSize: "14px",
-                            borderRadius: "8px",
-                            border: "1px solid #ccc",
-                            backgroundColor: "#fafafa",
-                            transition: "border 0.3s, box-shadow 0.3s",
-                            marginTop: "8px"
-                          }}
-                        />
-                      </div>
-
-                      <div className="add-option-group">
-                        <br />
-                        <IconButton
-                          onClick={() => handleRemoveQuestion(qIndex)} // Handle question removal
-                          sx={{
-                            color: "#d32f2f", // Icon color
-                            "&:hover": {
-                              backgroundColor: "#f8d7da", // Light red background on hover
-                            },
-                            borderRadius: "50%", // Circular button
-                            padding: "8px", // Padding for the icon button
-                          }}
-                          title="Remove question" // Tooltip for accessibility
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </div>
-                    </>
-                  )}
-
-                  {question.type === "fillintheblank" && (
-                    <>
-                      <input
-                        type="text"
-                        value={question.correctAnswer}
-                        onChange={(e) => handleFillInTheBlankAnswerChange(qIndex, e.target.value)}
-                        placeholder="Type your answer"
-                        required
-                        className="input-field"
-                        style={{
-                          padding: "12px",
-                          width: "100%",
-                          fontSize: "16px",
-                          borderRadius: "8px",
-                          marginTop: "8px",
-                          marginBottom: "16px",
-                          border: "1px solid #ccc",
-                          backgroundColor: "#fafafa",
-                          transition: "border-color 0.3s",
-                        }}
-                        onFocus={(e) => (e.target.style.borderColor = "#00796b")}
-                        onBlur={(e) => (e.target.style.borderColor = "#ccc")}
-                      />
-                      <div className="add-option-group">
-                        <IconButton
-                          onClick={() => handleRemoveQuestion(qIndex)} // Handle question removal
-                          sx={{
-                            color: "#d32f2f", // Icon color
-                            "&:hover": {
-                              backgroundColor: "#f8d7da", // Light red background on hover
-                            },
-                            borderRadius: "50%", // Circular button
-                            padding: "8px", // Padding for the icon button
-                          }}
-                          title="Remove question" // Tooltip for accessibility
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-              <Box sx={{ display: "flex", justifyContent: "space-around", mt: 3 }}>
-                <Button variant="contained" sx={{
-                  backgroundColor: "#00796b",
-                  "&:hover": {
-                    backgroundColor: "#004d40",
-                    transform: "scale(1.05)"
-                  },
-                  transition: "all 0.3s ease"
-                }} onClick={addMultipleChoiceQuestion}>
-                  Multiple Choice
-                </Button>
-                <Button variant="contained" sx={{
-                  backgroundColor: "#00796b",
-                  "&:hover": {
-                    backgroundColor: "#004d40",
-                    transform: "scale(1.05)"
-                  },
-                  transition: "all 0.3s ease"
-                }} onClick={addTrueFalseQuestion}>
-                  True/False
-                </Button>
-                <Button variant="contained" sx={{
-                  backgroundColor: "#00796b",
-                  "&:hover": {
-                    backgroundColor: "#004d40",
-                    transform: "scale(1.05)"
-                  },
-                  transition: "all 0.3s ease"
-                }} onClick={addMultipleResponseQuestion}>
-                  Multiple Response
-                </Button>
-                <Button variant="contained" sx={{
-                  backgroundColor: "#00796b",
-                  "&:hover": {
-                    backgroundColor: "#004d40",
-                    transform: "scale(1.05)"
-                  },
-                  transition: "all 0.3s ease"
-                }} onClick={addFillInTheBlankQuestion}>
-                  Fill-in-Blanks
-                </Button>
-
-              </Box>
-            </form>
-          </Box>
-
-        );
-      case 2:
-        return (
-
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              p: 4,
-            }}
-          >
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-              Select How You Want to Add Questions
-            </Typography>
-
-            {/* Selection Buttons */}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4 }}>
-              <Button
-                variant={option === 'import' ? 'contained' : 'outlined'}
-                onClick={() => { setOption('import'); setUploadType(''); }}
-                sx={{ borderRadius: 2, textTransform: 'none', px: 4 }}
-              >
-                Import Questions
-              </Button>
-              <Button
-                variant={option === 'bank' ? 'contained' : 'outlined'}
-                onClick={() => setOption('bank')}
-                sx={{ borderRadius: 2, textTransform: 'none', px: 4 }}
-              >
-                Select from Question Bank
-              </Button>
-            </Stack>
-
-            {/* Case 1: Import Questions */}
-            <Fade in={option === 'import'}>
-              <Box sx={{ display: option === 'import' ? 'block' : 'none' }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Import Questions
-                </Typography>
-
-                <Stack direction="row" spacing={2} sx={{ mb: 2 }} justifyContent="center">
-                  <Button
-                    variant={uploadType === 'modal' ? 'contained' : 'outlined'}
-                    onClick={() => setUploadType('modal')}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    Import from Test
-                  </Button>
-                  <Button
-                    variant={uploadType === 'file' ? 'contained' : 'outlined'}
-                    onClick={() => setUploadType('file')}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    Upload CSV / PDF
-                  </Button>
-                </Stack>
-
-                {/* Modal Option */}
-                {uploadType === 'modal' && (
-                  <>
-                    <Typography variant="body1" sx={{ mb: 1 }}>
-                      Open import modal to select questions from an existing test
-                    </Typography>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setModalOpen(true)}
-                      sx={{ borderRadius: 2, textTransform: 'none' }}
-                    >
-                      Open Import Modal
-                    </Button>
-
-                    <ImportQuestionsModal
-                      open={modalOpen}
-                      onClose={() => setModalOpen(false)}
-                      setSelectedImportTest={() => { }}
-                    />
-                  </>
-                )}
-
-                {uploadType === 'file' && (
-                  <Box sx={{
-                    mt: 3,
-                    width: '100%',
-                    maxWidth: 400,
-                    mx: 'auto'
-                  }}>
-                    {/* Hidden file input */}
-                    <input
-                      accept=".csv,.pdf"
-                      style={{ display: 'none' }}
-                      id="compact-file-upload"
-                      type="file"
-                      onChange={handleFileChange}
-                    />
-
-                    {/* Compact upload area */}
-                    <label htmlFor="compact-file-upload">
-                      <Paper elevation={1} sx={{
-                        p: 2,
-                        border: '1px solid #e0e0e0',
-                        borderRadius: 1,
-                        backgroundColor: '#fafafa',
-                        cursor: 'pointer',
-                        '&:hover': {
-                          borderColor: '#00796b',
-                          backgroundColor: '#f5f9fa'
-                        }
-                      }}>
-                        <Box sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 2
-                        }}>
-                          <CloudUploadIcon sx={{
-                            color: '#00796b',
-                            fontSize: '32px'
-                          }} />
-                          <Typography variant="body1" sx={{
-                            color: '#00796b',
-                            fontWeight: 500
-                          }}>
-                            Select file to upload
-                          </Typography>
-                        </Box>
-                        <Typography variant="caption" sx={{
-                          display: 'block',
-                          textAlign: 'center',
-                          mt: 1,
-                          color: '#616161'
-                        }}>
-                          CSV or PDF (Max 5MB)
-                        </Typography>
-                      </Paper>
-                    </label>
-
-                    {/* Selected file display (only appears when file is selected) */}
-                    {file && (
-                      <Box sx={{
-                        mt: 2,
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        backgroundColor: '#e8f5e9',
-                        borderRadius: 1
-                      }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-                          <DescriptionIcon sx={{
-                            color: '#00796b',
-                            mr: 1.5,
-                            fontSize: '20px'
-                          }} />
-                          <Typography noWrap sx={{
-                            fontWeight: 500,
-                            maxWidth: 250
-                          }}>
-                            {file.name}
-                          </Typography>
-                        </Box>
-                        <IconButton
-                          size="small"
-                          onClick={() => setFile(null)}
-                          sx={{ color: '#d32f2f' }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
-
-                    {/* Status messages */}
-                    {success && (
-                      <Alert severity="success" sx={{ mt: 1.5 }}>
-                        {success}
-                      </Alert>
-                    )}
-                    {error && (
-                      <Alert severity="error" sx={{ mt: 1.5 }}>
-                        {error}
-                      </Alert>
-                    )}
-                  </Box>
-                )}
-              </Box>
-            </Fade>
-
-            {/* Case 2: Question Bank */}
-            <Fade in={option === 'bank'}>
-              <Box sx={{ display: option === 'bank' ? 'block' : 'none' }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  SELECT QUESTIONS FROM QUESTION BANK
-                </Typography>
-
-                {fetchedQuestions.map((question, index) => (
-                  <Card
-                    key={index}
-                    sx={{
-                      mb: 2,
-                      borderRadius: 2,
-                      boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
-                      transition: 'transform 0.2s',
-                      '&:hover': { transform: 'scale(1.01)' },
-                    }}
-                  >
-                    <CardContent>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={selectedQuestions.some(q => q.id === question.id)}
-                            onChange={() => handleQuestionSelect(question)}
-                          />
-                        }
-                        label={
-                          <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {question.text}
-                          </Typography>
-                        }
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            </Fade>
-          </Box>
-        );
-      case 3:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <TextField
-              label="Time Limit Per Question (in minutes)"
-              type="number"
-              fullWidth
-              value={timeLimitPerQuestion}
-              onChange={(e) => setTimeLimitPerQuestion(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              label="Marks Per Question"
-              type="number"
-              fullWidth
-              value={marksPerQuestion}
-              onChange={(e) => {
-                setMarksPerQuestion(e.target.value);
-                setTotalMarks(totalQuestions * e.target.value);
-              }}
-              sx={{ mb: 2 }}
-            />
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              Total Questions: {totalQuestions}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              Total Marks: {totalMarks}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              Total Time Limit: {totalQuestions * timeLimitPerQuestion} minutes
-            </Typography>
-          </Box>
-        );
-      case 4:
-        return (
-          <TextField
-            select
-            label="Passing Criteria (%)"
-            fullWidth
-            value={passCriteria}
-            onChange={(e) => setPassCriteria(e.target.value)}
-            sx={{ mt: 2 }}
-          >
-            <MenuItem value={25}>25%</MenuItem>
-            <MenuItem value={50}>50%</MenuItem>
-            <MenuItem value={75}>75%</MenuItem>
-            <MenuItem value={100}>100%</MenuItem>
-          </TextField>
-        );
-
-      case 5:
-        return (
-          <Box sx={{ mt: 1, p: 3, borderRadius: 1, boxShadow: 2, backgroundColor: '#fff' }}>
-            {/* Introduction Section */}
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
-              Introduction
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
-              This text is displayed at the top of the test. You can use it for instructions or leave it blank.
-            </Typography>
-            <TextField
-              label="Instructions"
-              multiline
-              rows={3}
-              fullWidth
-              variant="outlined"
-              placeholder="Type your instructions here..."
-              onChange={(e) => setInstructions(e.target.value)}
-              sx={{ mb: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}
-            />
-
-            {/* Date and Time Settings */}
-            <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold' }}>
-              Date and Time Settings
-            </Typography>
-            <TextField
-              label="Start Date"
-              type="date"
-              fullWidth
-              onChange={(e) => setStartDate(e.target.value)} // Correct usage
-              sx={{ mb: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="End Date"
-              type="date"
-              fullWidth
-              onChange={(e) => setEndDate(e.target.value)} // Correct usage
-              sx={{ mb: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Due Time"
-              type="time"
-              fullWidth
-              onChange={(e) => setDueTime(e.target.value)} // Correct usage
-              sx={{ mb: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-            {/* Navigation Settings */}
-            <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
-              Navigation Settings
-            </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={allowJumpAround}
-                  onChange={(e) => setAllowJumpAround(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Allow jumping between questions"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={onlyMoveForward}
-                  onChange={(e) => setOnlyMoveForward(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Only move forward after answering"
-            />
-
-
-            {/* Browser Functionality Settings */}
-            <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
-              Browser Functionality
-            </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={disableRightClick}
-                  onChange={(e) => setDisableRightClick(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Disable right-click context menu"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={disableCopyPaste}
-                  onChange={(e) => setDisableCopyPaste(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Disable copy/paste"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={disableTranslate}
-                  onChange={(e) => setDisableTranslate(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Disable translate"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={disableAutocomplete}
-                  onChange={(e) => setDisableAutocomplete(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Disable autocomplete"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={disableSpellcheck}
-                  onChange={(e) => setDisableSpellcheck(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Disable spellcheck"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={disablePrinting}
-                  onChange={(e) => setDisablePrinting(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Disable printing"
-            />
-            {/* Allow Retake Option */}
-            <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
-              Retake Settings
-            </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={allowRetakes}
-                  onChange={(e) => setAllowRetakes(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Allow students to retake the test"
-            />
-            {allowRetakes && (
-              <TextField
-                label="Number of Retakes"
-                type="number"
-                fullWidth
-                value={numberOfRetakes}
-                onChange={(e) => setNumberOfRetakes(e.target.value)}
-                sx={{ mt: 1, mb: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}
-              />
-            )}
-            {/* Other Settings */}
-            <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
-              Other Settings
-            </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={randomizeOrder}
-                  onChange={(e) => setRandomizeOrder(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Randomize the order of the questions during the test"
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={allowBlankAnswers}
-                  onChange={(e) => setAllowBlankAnswers(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Allow students to submit blank/empty answers"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={penalizeIncorrectAnswers}
-                  onChange={(e) => setPenalizeIncorrectAnswers(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Penalize incorrect answers (negative marking)"
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={IsPublic}
-                  onChange={(e) => setIsPublic(e.target.checked)}
-                  name="isPublic"
-                />
-              }
-              label="Make this test public"
-            />
-
-            {/* Notifications */}
-            <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
-              Notifications
-            </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={receiveEmailNotifications}
-                  onChange={(e) => setReceiveEmailNotifications(e.target.checked)}
-                  sx={{ color: '#00796b' }}
-                />
-              }
-              label="Receive an email whenever someone finishes this test"
-            />
-            {receiveEmailNotifications && (
-              <TextField
-                label="Enter email addresses (comma separated)"
-                variant="outlined"
-                fullWidth
-                value={notificationEmails}
-                onChange={(e) => setNotificationEmails(e.target.value)}
-                sx={{ mt: 1, backgroundColor: '#fff', borderRadius: 1 }}
-              />
-            )}
-
-
-            {/* Conclusion Section */}
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
-              Conclusion
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
-              This text is displayed at the end of the test.
-            </Typography>
-            <TextField
-              label="Conclusion"
-              multiline
-              rows={3}
-              fullWidth
-              variant="outlined"
-              placeholder="Type your conclusion text here..."
-              onChange={(e) => setConclusion(e.target.value)}
-              sx={{ mb: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}
-            />
-          </Box>
-        );
-      case 6:
-        const totalQuestionsCount = questions.length + selectedQuestions.length; // Calculate total questions
-        return (
-          <Box sx={{ mt: 2, p: 4, borderRadius: 2, boxShadow: 3, backgroundColor: '#ffffff' }}>
-            <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold', color: '#333' }}>
-              Test Summary
-            </Typography>
-            <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold', color: '#00796b' }}>
-              Test Name: {testName}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              Total Questions: {totalQuestionsCount} {/* Use the combined count */}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              Total Time Limit: {totalQuestionsCount * timeLimitPerQuestion} minutes
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              Total Marks: {totalQuestionsCount * marksPerQuestion} {/* Update this if needed */}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              Passing Criteria: {passCriteria}%
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              Instructions: {instructions || "No instructions provided."}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              Conclusion: {conclusion || "No conclusion provided."}
-            </Typography>
-          </Box>
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <>
-      <Drawer open={isSidebarOpen} onClose={toggleSidebar}>
-        <Box sx={{ width: 220, textAlign: "center", padding: "12px" }}>
-          <List>
-            <ListItem button onClick={() => navigate("/admin-dashboard")}>
-              <ListItemText primary="Dashboard" />
-            </ListItem>
-            <ListItem button onClick={() => navigate("/testcreation")}>
-              <ListItemText primary="Test Creation" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/questioncreation')}>
-              <ListItemText primary="Question Creation" />
-            </ListItem>
-            <ListItem button onClick={() => navigate("/manage-tests")}>
-              <ListItemText primary="Manage Tests" />
-            </ListItem>
-            <ListItem button onClick={() => navigate("/userresponse")}>
-              <ListItemText primary="Test Analytics" />
-            </ListItem>
-            <ListItem button onClick={() => navigate("/announcements")}>
-              <ListItemText primary="Announcements" />
-            </ListItem>
-            <ListItem button onClick={() => navigate("/adminsettings")}>
-              <ListItemText primary="Settings" />
-            </ListItem>
-            <ListItem button onClick={() => handleLogout()}>
-              <ListItemText primary="Logout" />
-            </ListItem>
-          </List>
-        </Box>
-      </Drawer>
-      <AppBar position="fixed" sx={{ backgroundColor: "#003366", padding: "4px 8px" }}>
-        <Toolbar sx={{ padding: "0" }}>
-          <IconButton color="inherit" edge="start" sx={{ marginRight: 2 }} onClick={toggleSidebar}>
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontSize: "1rem" }}>
-            Skill Bridge Online Test Platform
-          </Typography>
-          <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
-          <Button color="inherit" onClick={() => navigate("/admin-profile")}>Admin profile</Button>
-          <Button color="inherit" onClick={() => navigate("/a")}>Test List</Button>
-          <Button color="inherit" onClick={() => navigate("/settings")}>Settings</Button>
-          <Button color="inherit" onClick={() => handleLogout()}>Logout</Button>
-        </Toolbar>
-      </AppBar>
-      <Box sx={{ position: "fixed", top: "64px", bottom: "80px", left: 0, right: 0, display: "flex", flexDirection: "column", padding: "16px", overflowY: "auto", height: "calc(100vh - 144px)", width: "100vw", maxWidth: "100%", margin: 0 }}>
-        <Typography variant="h4" sx={{ mb: 4, fontWeight: "bold", color: "#006699" }}>
-          Create New Test
-        </Typography>
-        <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-        <Paper sx={{ p: 3 }}>
-          {renderStepContent(activeStep)}
-        </Paper>
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3, padding: "0 16px" }}>
-          <Button variant="outlined " disabled={activeStep === 0} onClick={handleBack}>
-            Back
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleNext}
-            disabled={
-              (activeStep === 0 && (!testName || !testDescription || !subject || !difficulty)) ||
-              (activeStep === 1 && questions.length === 0) || // Disable if no questions are created
-              (activeStep === 3 && (!timeLimitPerQuestion || !marksPerQuestion)) || // Disable if time limit per question or marks per question are not set
-              (activeStep === 4 && !passCriteria) || // Disable if passing criteria is not set
-              (activeStep === 5 && (!instructions || !conclusion)) // Disable if instructions or conclusion are not set
-            }
-          >
-            {activeStep === steps.length - 1 ? "Publish" : "Next"}
-          </Button>
-        </Box>
-        {/* Success Dialog with Test Link */}
-        <Dialog open={openSuccessDialog} onClose={() => setOpenSuccessDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ bgcolor: '#003366', color: 'white', display: 'flex', alignItems: 'center' }}>
-            <CheckCircleIcon sx={{ mr: 1 }} />
-            Test Published Successfully!
-          </DialogTitle>
-          <DialogContent sx={{ p: 3 }}>
-            <Paper elevation={0} sx={{
-              p: 2,
-              mb: 3,
-              backgroundColor: '#f5f9fa',
-              borderLeft: '4px solid #00796b'
-            }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1 }}>
-                Share Test Link
-              </Typography>
-              <Box display="flex" alignItems="center">
-                <TextField
-                  value={testLink}
-                  fullWidth
-                  size="small"
-                  InputProps={{
-                    readOnly: true,
-                    sx: {
-                      backgroundColor: '#ffffff',
-                      '& fieldset': { borderColor: '#e0e0e0' }
-                    }
-                  }}
-                />
-                <Tooltip title="Copy link">
-                  <IconButton
-                    onClick={() => copyToClipboard(testLink)}
-                    sx={{
-                      ml: 1,
-                      backgroundColor: '#00796b',
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: '#004d40'
-                      }
-                    }}
-                  >
-                    <ContentCopy fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Paper>
-
-            <Button
-              variant="contained"
-              onClick={() => setOpenCSVModal(true)}
-              startIcon={<CloudUploadIcon />}
-              sx={{
-                backgroundColor: '#003366',
-                '&:hover': { backgroundColor: '#002244' }
-              }}
-            >
-              Upload Email List
-            </Button>
-          </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button
-              onClick={() => setOpenSuccessDialog(false)}
-              sx={{ color: '#003366' }}
-            >
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* CSV Upload Dialog */}
-        <Dialog open={openCSVModal} onClose={() => setOpenCSVModal(false)} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ bgcolor: '#003366', color: 'white', display: 'flex', alignItems: 'center' }}>
-            <ContactMailIcon sx={{ mr: 1 }} />
-            Invite Participants via Email
-          </DialogTitle>
-          <DialogContent sx={{ p: 3, mt: 2 }}>
-            <Paper elevation={0} sx={{
-              p: 3,
-              border: '2px dashed #bdbdbd',
-              borderRadius: 1,
-              backgroundColor: '#fafafa',
-              textAlign: 'center',
-              mb: 3,
-              '&:hover': {
-                borderColor: '#00796b',
-                backgroundColor: '#f5f9fa'
-              }
-            }}>
-              <input
-                accept=".csv"
-                style={{ display: 'none' }}
-                id="email-csv-upload"
-                type="file"
-                onChange={handleCSVUpload}
-              />
-              <label htmlFor="email-csv-upload" style={{ cursor: 'pointer' }}>
-                <CloudUploadIcon sx={{
-                  color: '#00796b',
-                  fontSize: '48px',
-                  mb: 1
-                }} />
-                <Typography variant="h6" sx={{ color: '#00796b', fontWeight: 500 }}>
-                  Drag & drop CSV file or click to browse
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#616161', mt: 1 }}>
-                  CSV should contain a column named "email"
-                </Typography>
-              </label>
-            </Paper>
-
-            {file && (
-              <Box sx={{
-                p: 2,
-                display: 'flex',
-                alignItems: 'center',
-                backgroundColor: '#e8f5e9',
-                borderRadius: 1,
-                mb: 2
-              }}>
-                <DescriptionIcon sx={{ color: '#00796b', mr: 2 }} />
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                    {file.name}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: '#616161' }}>
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </Typography>
-                </Box>
-                <IconButton
-                  onClick={() => {
-                    setFile(null);
-                    setEmailList([]);
-                  }}
-                  sx={{ color: '#d32f2f' }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Box>
-            )}
-
-            {emailList.length > 0 && (
-              <Box sx={{
-                maxHeight: 200,
-                overflow: 'auto',
-                border: '1px solid #e0e0e0',
-                borderRadius: 1,
-                p: 2
-              }}>
-                <Typography variant="subtitle2" sx={{ mb: 1, color: '#00796b' }}>
-                  {emailList.length} emails loaded:
-                </Typography>
-                <List dense>
-                  {emailList.slice(0, 5).map((email, idx) => (
-                    <ListItem key={idx} sx={{ py: 0.5 }}>
-                      <ListItemText primary={email} />
-                    </ListItem>
-                  ))}
-                  {emailList.length > 5 && (
-                    <Typography variant="body2" sx={{
-                      textAlign: 'center',
-                      color: '#616161',
-                      mt: 1
-                    }}>
-                      + {emailList.length - 5} more emails
-                    </Typography>
-                  )}
-                </List>
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button
-              onClick={() => setOpenCSVModal(false)}
-              sx={{ color: '#003366' }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              disabled={emailList.length === 0}
-              onClick={handleSaveAndSendEmails}
-              sx={{
-                backgroundColor: '#003366',
-                '&:hover': { backgroundColor: '#002244' },
-                '&:disabled': { backgroundColor: '#e0e0e0' }
-              }}
-            >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Send Invitations'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-        {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <CircularProgress />
-          </Box>
-        )}
-      </Box>
-      <footer
-        style={{
-          backgroundColor: "#003366",
-          color: "white",
-          padding: "16px 0",
-          textAlign: "center",
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          width: "100%",
-          zIndex: 1000,
-        }}
-      >
-        <Typography>© 2025 Skill Bridge. All rights reserved.</Typography>
-        <div>
-          <IconButton href="https://twitter.com" color="inherit">
-            <TwitterIcon />
-          </IconButton>
-          <IconButton href="https://facebook.com" color="inherit">
-            <FacebookIcon />
-          </IconButton>
-          <IconButton href="https://instagram.com" color="inherit">
-            <InstagramIcon />
-          </IconButton>
-        </div>
-      </footer>
-    </>
-  );
+import React, { useState,useEffect, useCallback } from "react";
+import axios from "axios"; // Inline CSS styles
+import { useParams } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import { FormControl, FormControlLabel, Radio, RadioGroup, Checkbox } from "@mui/material";
+import WebcamProctoring from './face'; 
+// Styles
+const styles = `.test-container {
+    font-family: Arial, sans-serif;
+    background-color: #f8f8f8;
+    padding: 20px;
+    height: 100vh; /* Set the height to 100% of the viewport height */
+    overflow: hidden; /* Prevent overflow */
+    display: flex;
+    flex-direction: column; /* Use flexbox to manage layout */
+}
+.header {
+    background-color: #e0e0e0;
+    padding: 10px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+.content {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    flex-grow: 1; /* Allow content to grow and fill available space */
+    overflow: hidden; /* Prevent overflow */
+}
+.question-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 70%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; /* Enable vertical scrolling for the question section */
+}
+.question-section h2 {font-size: 18px;margin-bottom: 10px;}
+.question-divider {margin-top: 10px;margin-bottom: 20px;border: 1px solid #ddd;}
+.options {margin-top: 15px;}.option {display: block;margin: 8px 0;font-size: 14px;}
+.option input {margin-right: 8px;}.sidebar {width: 25%;}
+.timer {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.timer h3 {margin: 0;font-size: 16px;}
+.time-structure {display: flex;justify-content: space-evenly;margin-top: 10px;}
+.time-block {text-align: center;}
+.time-value {font-size: 32px;font-weight: bold;display: block;color: #333;}
+.time-label {font-size: 14px;color: #555;}
+.question-map {margin-top: 20px;background-color: #fff;padding: 15px;border-radius: 8px;box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+.question-map h3 {font-size: 16px;margin-bottom: 10px;}
+.question-grid {display: grid;grid-template-columns: repeat(5,1fr);gap: 5px;}
+.question-btn {width: 30px;height: 30px;font-size: 12px;border: none;border-radius: 4px;background-color: #e0e0e0;cursor: pointer;}
+.question-btn.answered {background-color: #4caf50;color: #fff;}.question-btn.current {background-color: #2196f3;color: #fff;}
+.question-btn.review {background-color: #801216;color: #fff;}.question-btn:hover {background-color: #ddd;}
+.bottom-nav {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f1f1f1;
+    padding: 10px 20px;
+    margin-top: 20px;
+    border-top: 1px solid #ccc;
+}
+.review-button {padding: 8px 15px;background-color: #801216;border: none;border-radius: 5px;color: white;cursor: pointer;font-weight: bold;}
+.review-button:hover {background-color: #5f0f12;}
+.nav-buttons button {background-color: #1976d2;color: white;border: none;padding: 10px 15px;margin: 0 5px;border-radius: 5px;cursor: pointer;}
+.submit-btn {background-color: #4caf50;color: white;border: none;padding: 10px 20px;border-radius: 5px;cursor: pointer;}
+.next-btn {background-color: #4caf50;color: white;border: none;padding: 10px 20px;border-radius: 5px;cursor: pointer;}
+.prev-btn {background-color: #4caf50;color: white;border: none;padding: 10px 20px;border-radius: 5px;cursor: pointer;}
+.legend {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    gap: 20px;
+}
+.legend-item {width: 15px;height: 15px;margin-right: 5px;display: inline-block;border-radius: 50%;}
+.not-attempted {
+    background-color: #add8e6; /* Light blue for not attempted */
+}
+
+.not-answered {
+    background-color: #f6b43a; /* Yellow for not answered */
+}
+
+.answered {
+    background-color: #4caf50; /* Green for answered */
+}
+
+.current {
+    background-color: #2196f3; /* Blue for current question */
+}
+.review {background-color: #801216;}
+.success-message {text-align: center;margin-top: 50px;font-size: 24px;font-weight: bold;color: #4caf50;}
+.reviewPage {padding: 20px;background-color: #f0f4f8;border-radius: 10px;margin-top: 20px;}
+.reviewQuestion {margin-bottom: 20px;padding: 15px;background-color: white;border-radius: 5px;box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.correctAnswer {color: #48bb78;font-weight: bold;}
+.wrongAnswer {color: #e53e3e;font-weight: bold;}
+.modalOverlay {position: fixed;top: 0;left: 0;right: 0;bottom: 0;background-color: rgba(0,0,0,0.5);display: flex;justify-content: center;align-items: center;z-index: 1000;}
+.modalContent {background-color: white;padding: 40px;border-radius: 10px;box-shadow: 0 8px 16px rgba(0,0,0,0.2);text-align: center;max-width: 500px;width: 100%;}
+.modalTitle {font-size: 2rem;font-weight: 700;color: #2d3748;margin-bottom: 20px;}
+.modalText {font-size: 1.2rem;color: #4a5568;margin-bottom: 30px;}
+.modalButton {background-color: #48bb78;color: white;padding: 12px 24px;border: none;border-radius: 5px;cursor: pointer;font-size: 1rem;font-weight: 600;}
+.modalButton:hover {background-color: #38a169;}`;
+
+// Append styles to the document
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
+
+const questionTypes = {
+    MULTIPLE_CHOICE: "multiplechoice",
+    MULTIPLE_RESPONSE: "multipleresponse",
+    TRUE_FALSE: "truefalse",
+    FILL_IN_THE_BLANKS: "fillintheblanks",
 };
 
-export default CreateNewTest;
+const API_BASE_URL = "https://onlinetestcreationbackend.onrender.com/api";
+
+export default function OnlineTestPage() {
+    const { uuid } = useParams(); // ✅ Now we use uuid from the URL
+    const [testId, setTestId] = useState(null);
+    const [hoveredIndex, setHoveredIndex] = useState(null);
+    const [questions, setQuestions] = useState([]);
+    const [selectedOption, setSelectedOption] = useState("");
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [answers, setAnswers] = useState(Array(questions.length).fill(null));
+    const [skippedQuestions, setSkippedQuestions] = useState(new Set());
+    const [reviewedQuestions, setReviewedQuestions] = useState(new Set());
+    const [timedOutQuestions, setTimedOutQuestions] = useState(new Set());
+    const [showScoreModal, setShowScoreModal] = useState(false); // State to control score modal
+    const [score, setScore] = useState(0); // State to store the score
+    const [showReviewPage, setShowReviewPage] = useState(false); // State to control review page
+    const [timeLeft, setTimeLeft] = useState(2559); // Total time left in seconds
+    const questionTime = 60; // 1 minute for each question
+    const [testAttemptId, setTestAttemptId] = useState(null);
+    const [passFailStatus, setPassFailStatus] = useState(false);
+    const [totalQuestions, setTotalQuestions] = useState(0); // State for total questions
+    const [timeTaken, setTimeTaken] = useState(0);
+    const [passCriteria, setPassCriteria] = useState(50.0);
+    const [isTimerRunning, setIsTimerRunning] = useState(false);
+    const [totalTimeLeft, setTotalTimeLeft] = useState(2559);
+    const navigate = useNavigate();
+    const [testTitle, setTestTitle] = useState("Unknown Test");
+    const [testSubject, setTestSubject] = useState("Unknown Subject");
+    const [previousScore, setPreviousScore] = useState(null);
+    const [testCategory, setTestCategory] = useState("");
+    const [currentQuestionTime, setCurrentQuestionTime] = useState(questionTime);
+
+    const handleRetake = () => {
+        setCurrentQuestionIndex(0);
+        setSelectedOption("");
+        setAnswers(Array(questions.length).fill(null));
+        setSkippedQuestions(new Set());
+        setReviewedQuestions(new Set());
+        setTimedOutQuestions(new Set());
+        setShowReviewPage(false);
+        setTimeLeft(2559);
+        setCurrentQuestionTime(questionTime);
+    };
+    const userToken = localStorage.getItem("user_token");
+
+    const decodeUUID = useCallback(async () => {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/decode-test-uuid/${uuid}/`, {
+            params: { uuid },
+            headers: { Authorization: `Token ${userToken}` },
+          });
+          setTestId(response.data.test_id);
+        } catch (error) {
+          console.error("Error decoding UUID:", error);
+        }
+      }, [uuid, userToken]);      
+    
+    const fetchQuestions = useCallback(async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/tests/${testId}/`, {
+                headers: { Authorization: `Token ${userToken}` },
+            });
+
+            if (response.data && response.data.questions) {
+                setQuestions(response.data.questions);
+
+                // Extract and set test details
+                setTestTitle(response.data.title || "Unknown Test");
+                setTestSubject(response.data.subject || "Unknown Subject");
+                setPreviousScore(response.data.previous_score || 0);
+                setTestCategory(response.data.category || "");
+
+                const initialAnswers = response.data.questions.map((question) => {
+                    if (question.type === questionTypes.FILL_IN_THE_BLANKS) {
+                        return Array((question.text.match(/____/g) || []).length).fill(null);
+                    } else if (question.type === questionTypes.MULTIPLE_RESPONSE) {
+                        return [];
+                    } else {
+                        return null;
+                    }
+                });
+
+                setAnswers(initialAnswers);
+                setTotalQuestions(response.data.questions.length);
+
+                const totalTimeLimit = parseFloat(response.data.total_time_limit);
+                setTimeLeft(totalTimeLimit * 60);
+                 
+
+                const questionTimeLimit = parseFloat(response.data.time_limit_per_question);
+                setCurrentQuestionTime(questionTimeLimit * 60);
+
+                setPassCriteria(response.data.pass_criteria);
+            }
+        } catch (error) {
+            console.error("Error fetching questions:", error);
+        }
+    }, [userToken, testId]);
+
+    const startTest = useCallback(async () => {
+        try {
+            const response = await axios.post(
+                `${API_BASE_URL}/attempts/`,
+                { test_id: testId },
+                { headers: { Authorization: `Token ${userToken}` } }
+            );
+
+            setTestAttemptId(response.data.id);
+            setIsTimerRunning(true);
+        } catch (error) {
+            console.error("Error starting test attempt:", error);
+        }
+    }, [userToken, testId]);
+
+    useEffect(() => {
+        decodeUUID(); // Decode UUID and set testId
+    }, [decodeUUID]);
+    
+    useEffect(() => { 
+        if (testId !== null) {
+            fetchQuestions(); // Fetch questions only after testId is available
+            startTest();      // Start the test attempt only after testId is available
+        }
+    }, [fetchQuestions, startTest, testId]);
+    
+    const fetchUserDetails = async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/user-profile/`, {
+                headers: { Authorization: `Token ${userToken}` },
+            });
+            return {
+                username: response.data.username, // Adjust based on actual API response
+                userId: response.data.id, // Ensure this matches the field returned by your API
+            };
+        } catch (error) {
+            console.error("Error fetching user details:", error);
+            return null;
+        }
+    };
+
+    const handleSubmit = async () => {
+        let correctAnswers = 0;
+    
+        // Prepare answers to submit
+        const answersToSubmit = answers.map((answer, index) => ({
+            question: questions[index].id,
+            selected_option: answer || "", // Use an empty string for unanswered questions
+        }));
+    
+        // Iterate through each answer to check correctness
+        answersToSubmit.forEach((answer, index) => {
+            const question = questions[index];
+            const userAnswer = answer.selected_option;
+    
+            console.log("Question:", question);
+            console.log("User  Answer:", userAnswer);
+            console.log("Correct Answer:", question.correct_answer);
+    
+            if (userAnswer === "") return; // Skip if no answer provided
+    
+            switch (question.type) {
+                case questionTypes.FILL_IN_THE_BLANKS:
+                    // Check fill-in-the-blank answers
+                    if (typeof question.correct_answer === 'string' && 
+                        userAnswer.toLowerCase() === question.correct_answer.toLowerCase()) {
+                        correctAnswers++;
+                    }
+                    break;
+    
+                case questionTypes.TRUE_FALSE:
+                    // Check true/false answers
+                    const userAnswerBoolean = (userAnswer === "true");
+                    if (userAnswerBoolean === question.correct_answer) {
+                        correctAnswers++;
+                    }
+                    break;
+    
+                case questionTypes.MULTIPLE_CHOICE:
+                    // Check multiple choice answers
+                    if (typeof question.correct_answer === 'string' && 
+                        userAnswer.toLowerCase() === question.correct_answer.toLowerCase()) {
+                        correctAnswers++;
+                    }
+                    break;
+    
+                case questionTypes.MULTIPLE_RESPONSE:
+                    // Check multiple response answers
+                    const userAnswersArray = Array.isArray(userAnswer) ? userAnswer : [userAnswer];
+                    const correctAnswersArray = Array.isArray(question.correct_answer) ? question.correct_answer : [];
+    
+                    // Check if all user answers are in the correct answers
+                    const isCorrect = userAnswersArray.every(userAnswer => 
+                        correctAnswersArray.includes(userAnswer)
+                    );
+    
+                    if (isCorrect) {
+                        correctAnswers++;
+                    }
+                    break;
+    
+                default:
+                    console.warn("Unknown question type:", question.type);
+                    break;
+            }
+        });
+        const percentage = ((correctAnswers / questions.length) * 100).toFixed(2);
+        const userDetails = await fetchUserDetails();
+        setScore(percentage);
+        setPassFailStatus(percentage >= passCriteria);
+        setShowScoreModal(true);
+        setTimeTaken(timeTaken);
+    
+        try {
+            // Submit test attempt
+            await axios.put(
+                `${API_BASE_URL}/attempts/${testAttemptId}/`,
+                {
+                    answers: answersToSubmit,
+                    score: percentage,
+                    total_questions: totalQuestions,
+                    time_taken: timeTaken,
+                    passed: passFailStatus,
+                },
+                { headers: { Authorization: `Token ${userToken}` } }
+            );
+    
+            const attemptDate = new Date().toISOString();
+    
+// Update performance stats
+            await axios.post(
+                `${API_BASE_URL}/performance-stats/`,
+                {
+                    user: userDetails?.userId,
+                    name: testCategory || testTitle,
+                    score: percentage,
+                },
+                { headers: { Authorization: `Token ${userToken}` } }
+            );
+    
+            // Log recent activity
+            await axios.post(
+                `${API_BASE_URL}/recent-activities/`,
+                {
+                    user: userDetails?.userId,
+                    description: `Attempted ${testTitle}`,
+                    details: `Scored ${percentage}% in ${testSubject}`,
+                },
+                { headers: { Authorization: `Token ${userToken}` } }
+            );
+    
+            // Retrieve User Statistics
+            const statisticsResponse = await axios.get(
+                `${API_BASE_URL}/test-attempts/statistics/`,
+                { headers: { Authorization: `Token ${userToken}` } }
+            );
+    
+            const { highest_score, accuracy, certificates_earned } = statisticsResponse.data;
+    
+            // Retrieve Ranking after submission
+            const rankingResponse = await axios.get(
+                `${API_BASE_URL}/test-attempts/rank/${testId}/`,
+                { headers: { Authorization: `Token ${userToken}` } }
+            );
+    
+            const userRank = rankingResponse.data.rank || null;
+    
+            // Send data to Attempted Tests API (Including Ranking and Statistics)
+            await axios.post(
+                `${API_BASE_URL}/attempted-tests/`,
+                {
+                        user: userDetails?.userId,
+                        test: parseInt(testId),
+                        title: testTitle,
+                        subject: testSubject,
+                        date: attemptDate,
+                        max_score: highest_score, // Use the highest score from statistics
+                        status: percentage >= passCriteria ? "passed" : "failed", // Update status based on pass criteria
+                        rank: userRank, // Updated with ranking logic
+                        accuracy: accuracy, // Include accuracy from statistics
+                        certificates_earned: certificates_earned // Include certificates earned from statistics
+                   
+                },
+                { headers: { Authorization: `Token ${userToken}` } }
+            );
+    
+            console.log("Test submitted successfully. Ranking:", userRank);
+        } catch (error) {
+            console.error("Error submitting answers:", error.response ? error.response.data : error.message);
+        }
+    };
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTimeLeft((prevTime) => {
+                if (prevTime <= 0) {
+                    clearInterval(timer);
+                    return 0;
+                }
+                return prevTime - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+      }, []);
+      useEffect(() => {
+          let timer;
+          if (isTimerRunning) {
+              timer = setInterval(() => {
+                  setTimeTaken((prevTime) => prevTime + 1); // Increment time taken by 1 second
+              }, 1000);
+          }
+          return () => clearInterval(timer); // Cleanup the timer on component unmount or when timer stops
+      }, [isTimerRunning]);
+      const formatTimeLeft = (time) => {
+        const minutes = Math.floor(time / 60);
+        const seconds = time % 60;
+        return {
+            minutes: String(minutes).padStart(2, "0"),
+            seconds: String(seconds).padStart(2, "0"),
+        };
+      };
+      
+      const handleNext = () => {
+        const updatedAnswers = [...answers];
+        if (selectedOption) {
+            updatedAnswers[currentQuestionIndex] = selectedOption;
+        } else {
+            setSkippedQuestions((prev) => new Set(prev).add(currentQuestionIndex));
+        }
+        setAnswers(updatedAnswers);
+        setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+        setSelectedOption("");
+    
+        // Set the time for the next question to 60 seconds
+        setCurrentQuestionTime(60);
+    };
+    
+    const handlePrevious = () => {
+        // Check if the previous question has timed out
+        if (timedOutQuestions.has(currentQuestionIndex - 1)) {
+            return; // Prevent navigation if the previous question has timed out
+        }
+    
+        if (currentQuestionIndex > 0) {
+            setCurrentQuestionIndex(currentQuestionIndex - 1);
+            setSelectedOption(answers[currentQuestionIndex - 1] || "");
+    
+            // Set the time for the previous question to 60 seconds
+            setCurrentQuestionTime(60);
+        }
+    };
+    useEffect(() => {
+        const questionTimer = setInterval(() => {
+            setCurrentQuestionTime((prevTime) => {
+                if (prevTime <= 0) {
+                    clearInterval(questionTimer);
+                    setTimedOutQuestions((prev) => new Set(prev).add(currentQuestionIndex));
+                    handleNext(); // Move to the next question when time is up
+                    return 0;
+                }
+                return prevTime - 1;
+            });
+        }, 1000);
+        return () => clearInterval(questionTimer);
+    }, [currentQuestionIndex]);
+        
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setTotalTimeLeft((prevTime) => {
+                        if (prevTime <= 0) {
+                            clearInterval(timer);
+                            navigate('/exit');
+                            return 0;
+                        }
+                        return prevTime - 1;
+                    });
+                }, 1000);
+                return () => clearInterval(timer);
+            }, [navigate]);
+        
+            useEffect(() => {
+                const questionTimer = setInterval(() => {
+                    setCurrentQuestionTime((prevTime) => {
+                        if (prevTime <= 0) {
+                            clearInterval(questionTimer);
+                            setTimedOutQuestions((prev) => new Set(prev).add(currentQuestionIndex));
+                            handleNext(); // Move to the next question when time is up
+                            return 0;
+                        }
+                        return prevTime - 1;
+                    });
+                }, 1000);
+                return () => clearInterval(questionTimer);
+            }, [currentQuestionIndex]);
+    const handleFillInTheBlanksChange = (event, blankIndex) => {
+        const value = event.target.value;
+
+        setAnswers((prev) => {
+            const newAnswers = [...(prev[currentQuestionIndex] || [])];
+            newAnswers[blankIndex] = value; // Store the answer as a string
+
+            const updatedAnswers = [...prev];
+            updatedAnswers[currentQuestionIndex] = newAnswers;
+
+            return updatedAnswers;
+        });
+    };
+
+    const closeScoreModal = () => {
+        setShowScoreModal(false);
+    };
+
+    const handleReview = () => {
+        setShowReviewPage(true);
+        setShowScoreModal(false);
+    };
+
+    const handleAnswerChange = (event) => {
+        const value = event.target.value;
+        const updatedAnswers = [...answers];
+
+        if (questions[currentQuestionIndex].type === questionTypes.MULTIPLE_RESPONSE) {
+            // For multiple response questions, toggle the answer
+            if (updatedAnswers[currentQuestionIndex].includes(value)) {
+                updatedAnswers[currentQuestionIndex] = updatedAnswers[currentQuestionIndex].filter(answer => answer !== value);
+            } else {
+                updatedAnswers[currentQuestionIndex].push(value);
+            }
+        } else {
+            // For other question types, set the answer directly
+            updatedAnswers[currentQuestionIndex] = value;
+        }
+        setAnswers(updatedAnswers);
+    };
+
+    const handleQuestionNavigation = (index) => {
+        // Check if the current question time has expired
+        if (timedOutQuestions.has(index)) {
+            alert("You cannot navigate to this question as the time has expired.");
+            return;
+        }
+        setCurrentQuestionIndex(index);
+        setSelectedOption(answers[index] || "");
+        setCurrentQuestionTime(questionTime);
+    };
+
+    const { minutes, seconds } = formatTimeLeft(currentQuestionTime);
+    const currentQuestion = questions[currentQuestionIndex] || null;
+
+    return (
+        <div className="test-container">
+            <WebcamProctoring studentId={1} testId={2} />
+            {!showReviewPage ? (
+                <>
+                    <div className="header">Online Test</div>
+
+                    <div className="content">
+                        <div className="question-section">
+                            {currentQuestion && (
+                                <>
+                                    <p className="timeLeft">Time Left: {minutes}:{seconds}</p>
+                                    <h2 className="questionTitle">{currentQuestion.text}</h2>
+                                    {currentQuestion.type === questionTypes.MULTIPLE_CHOICE && (
+                                        <div>
+                                            <FormControl component="fieldset">
+                                                <RadioGroup value={answers[currentQuestionIndex] || ""} onChange={handleAnswerChange}>
+                                                    {currentQuestion.options?.map((option, idx) => (
+                                                        <FormControlLabel
+                                                            key={idx}
+                                                            value={option}
+                                                            control={<Radio style={{ color: "#3182ce" }} />}
+                                                            label={option}
+                                                            style={{ margin: "10px 0" }}
+                                                        />
+                                                    ))}
+                                                </RadioGroup>
+                                            </FormControl>
+                                        </div>
+                                    )}
+
+                                    {currentQuestion.type === questionTypes.MULTIPLE_RESPONSE && (
+                                        <div>
+                                            {currentQuestion.options?.map((option, idx) => (
+                                                <FormControlLabel
+                                                    key={idx}
+                                                    control={
+                                                        <Checkbox
+                                                            checked={answers[currentQuestionIndex]?.includes(option)} // Check if the option is selected
+                                                            onChange={handleAnswerChange}
+                                                            value={option} // Set the value to the option
+                                                            style={{ color: "#3182ce" }}
+                                                        />
+                                                    }
+                                                    label={option}
+                                                    style={{ margin: "10px 0" }}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {currentQuestion.type === 'truefalse' && (
+                                        <div>
+                                            <FormControl component="fieldset">
+                                                <RadioGroup value={answers[currentQuestionIndex] || ""} onChange={handleAnswerChange}>
+                                                    <FormControlLabel
+                                                        value="true"
+                                                        control={<Radio style={{ color: "#3182ce" }} />}
+                                                        label="True"
+                                                    />
+                                                    <FormControlLabel
+                                                        value="false"
+                                                        control={<Radio style={{ color: "#3182ce" }} />}
+                                                        label="False"
+                                                    />
+                                                </RadioGroup>
+                                            </FormControl>
+                                        </div>
+                                    )}
+
+                                    {currentQuestion.type === 'fillintheblank' && (
+                                        <div>
+                                            <p>
+                                                {currentQuestion.text.split("____").map((part, index, array) => (
+                                                    <span key={index}>
+                                                        {part}
+                                                        {index < array.length - 1 && (
+                                                            <input
+                                                                type="text"
+                                                                onChange={(e) => handleFillInTheBlanksChange(e, index)}
+                                                                value={answers[currentQuestionIndex]?.[index] || ""}
+                                                                placeholder="Type Here"
+                                                                style={{
+                                                                    padding: "16px",
+                                                                    borderRadius: "8px",
+                                                                    border: "1px solid #ccc",
+                                                                    width: "200px",
+                                                                    margin: "0 10px",
+                                                                    transition: "border-color 0.3s",
+                                                                    textAlign: "center",
+                                                                }}
+                                                                onFocus={(e) => (e.target.style.borderColor = "#3182ce")}
+                                                                onBlur={(e) => (e.target.style.borderColor = "#ccc")}
+                                                            />
+                                                        )}
+                                                    </span>
+                                                ))}
+                                            </p>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        <div className="sidebar">
+                            <div className="timer">
+                                <h3>Time Left</h3>
+                                <div className="time-structure">
+                                    <div className="time-block">
+{`${formatTimeLeft(timeLeft).minutes} mins ${formatTimeLeft(timeLeft).seconds} secs`}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="question-map">
+                                <h3>Questions</h3>
+                                <div className="question-grid">
+    {questions.map((_, index) => {
+        const isCurrent = index === currentQuestionIndex;
+        const isAnswered = answers[index] !== null && answers[index] !== undefined;
+        const isNotAttempted = !isAnswered && !skippedQuestions.has(index);
+        const isNotAnswered = skippedQuestions.has(index);
+
+        return (
+            <button
+                key={index + 1}
+                className={`question-btn ${
+                    isCurrent
+                        ? "current"
+                        : isAnswered
+                        ? "answered"
+                        : isNotAttempted
+                        ? "not-attempted"
+                        : isNotAnswered
+                        ? "not-answered"
+                        : ""
+                }`}
+                onClick={() => handleQuestionNavigation(index)}
+            >
+                {index + 1}
+            </button>
+        );
+    })}
+</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bottom-nav">
+                    <button 
+      className="prev-btn" 
+      onClick={handlePrevious} 
+      disabled={timedOutQuestions.has(currentQuestionIndex - 1)}
+    >
+      Previous
+    </button>
+  
+  
+  {currentQuestionIndex !== questions.length - 1 && (
+    <button 
+      className="next-btn" 
+      onClick={handleNext}
+    >
+      Next
+    </button>
+  )}
+  
+  <button className="submit-btn" onClick={handleSubmit}>
+    Submit Test
+  </button>
+                    </div>
+
+                    {/* Legend Section */}
+                    <div className="legend">
+                        <div className="legend-item current"></div> Current
+                        <div className="legend-item not-attempted"></div> Not Attempted
+                        <div className="legend-item answered"></div> Answered
+                        <div className="legend-item not-answered"></div> Not Answered
+                        <div className="legend-item review"></div> Review
+                    </div>
+
+                    {showScoreModal && (
+                        <div className="modalOverlay">
+                            <div className="modalContent">
+                                <h2 className="modalTitle">Test Submitted!</h2>
+                                <p className="modalText">
+                                    You scored {score}% ({Math.round((score / 100) * questions.length)} out of {questions.length} questions).
+                                </p>
+                                <p>Status: {passFailStatus ? "Passed" : "Failed"}</p>
+                                <button className="modalButton" onClick={closeScoreModal}>
+                                    Close
+                                </button>
+                                <button
+                        className="btn"
+                        style={{ marginTop: "20px" }}
+                        onClick={handleRetake}
+                    >
+                        Retake
+                    </button>
+                            </div>
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div className="reviewPage">
+                    <h1 style={styles.header}>Review Page</h1>
+                    {questions.map((question, index) => (
+                        <div key={question.id} className="reviewQuestion">
+
+    </div>
+))}
+
+                </div>
+            )}
+        </div>
+    );
+}
