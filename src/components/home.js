@@ -99,21 +99,21 @@ const HomePage = () => {
   const performers = [
     { id: 1, name: 'Alan Johnson', profile_picture_url: image1, achievement: 'Top Scorer in Mathematics' },
     { id: 2, name: 'Navier Smith', profile_picture_url: image2, achievement: 'Outstanding Performance in Science' },
-    { id: 3, name: 'Rashta Brown', profile_picture_url: image3, achievement: 'Excellence in Literature' },
+    { id: 3, name: 'Charlie Brown', profile_picture_url: image3, achievement: 'Excellence in Literature' },
     { id: 5, name: 'Ethan Williams', profile_picture_url: image5, achievement: 'Champion in Coding Competitions' },
-    { id: 6, name: 'Ian Thompson', profile_picture_url: image6, achievement: 'Top Innovator in Robotics' },
-    { id: 7, name: 'Georgia Lee', profile_picture_url: image7, achievement: 'Best Research Paper in Physics' },
-    { id: 9, name: 'Fiona Garcia', profile_picture_url: image9, achievement: 'Top Speaker in Debate Championships' },
-    { id: 10, name: 'Julian Martinez', profile_picture_url: image10, achievement: 'Gold Medalist in Sports' },
+    { id: 6, name: 'Fiona Garcia', profile_picture_url: image6, achievement: 'Top Innovator in Robotics' },
+    { id: 7, name: 'George Lee', profile_picture_url: image7, achievement: 'Best Research Paper in Physics' },
+    { id: 9, name: 'Ian Thompson', profile_picture_url: image9, achievement: 'Top Speaker in Debate Championships' },
+    { id: 10, name: 'Julia Martinez', profile_picture_url: image10, achievement: 'Gold Medalist in Sports' },
   ];
 
   const HeroSection = () => (
     <Box sx={{ backgroundColor: "#006699", padding: "42px 16px", textAlign: "center" }}>
-      <Typography variant="h2" color="white">
+      <Typography variant="h3" color="white">
         Welcome to Skill Bridge Online Test Platform
       </Typography>
       <Typography variant="h4" color="white" sx={{ marginTop: "16px" }}>
-        Explore a variety of tests across categories and track your progress!
+        Explore a variety of tests and track your progress!
       </Typography>
       <Button
         variant="contained"
@@ -605,17 +605,85 @@ const HomePage = () => {
             />
           )}
            <List>
-            <ListItem>
-            <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
-            </ListItem>
-            <ListItem> <Button color="inherit" onClick={() => navigate("/login")}>Login</Button>
-            </ListItem>
-            <ListItem ><Button color="inherit" onClick={() => navigate("/register")}>Register</Button>
-            </ListItem>
-            <ListItem> <Button color="inherit" onClick={() => navigate("/aboutus")}>About Us</Button>
-            </ListItem>
-            <ListItem> <Button color="inherit" onClick={() => navigate("/contactpage")}>Contact Us</Button>
-            </ListItem>
+
+
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/home')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      fontSize: "16px",
+      textAlign: "left", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    Home
+  </Button>
+</ListItem>
+
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/aboutus')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      fontSize: "16px",
+      textAlign: "left", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    About Us
+  </Button>
+</ListItem>
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/contact')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      fontSize: "16px",
+      textAlign: "left", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    Contact Us
+  </Button>
+</ListItem>
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/RegisterPage')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      fontSize: "16px",
+      textAlign: "left", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    Sign-up
+  </Button>
+</ListItem>
+
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/login')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      fontSize: "16px",
+      textAlign: "left", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    Login
+  </Button>
+</ListItem>
           </List>
         </Box>
       </Drawer>

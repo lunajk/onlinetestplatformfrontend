@@ -15,7 +15,7 @@ import ContentCopy from '@mui/icons-material/ContentCopy';
 const steps = ["Test Name & Description", "Question Creation", "Question Bank", "Set Time Limit & Marks", "Set Pass/Fail Criteria", "Settings", "Publish & Share"];
 const BASE_URL = "https://onlinetestplatformfrontend.vercel.app/smartbridge/online-test-assessment"; // Replace with your actual base URL
 const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
-const CreateNewTest = () => {
+const CreateTest = () => {
         const [option, setOption] = useState(null);
         const [file, setFile] = useState(null);
         const [allowRetakes, setAllowRetakes] = useState(false); // Default: false
@@ -1473,133 +1473,7 @@ const handleSubmit = async () => {
 
   return (
     <>
-      <Drawer open={isSidebarOpen} onClose={toggleSidebar}>
-        <Box sx={{ width: 220, textAlign: "center", padding: "12px" }}>
-        <img
-              src={logo}
-              alt="Logo"
-              style={{
-                maxWidth: "100%",
-                height: "auto",
-                marginBottom: "16px",
-                borderRadius: "8px",
-              }}
-            />
- <List>
-    <ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-  <Button
-    onClick={() => navigate('/admin-dashboard')}
-    sx={{
-      color: "#003366", // Dark blue color
-      fontWeight: "bold",
-      textAlign: "left",
-      fontSize: "16px", // Align the text to the left
-      width: "100%", // Take up full width of the ListItem
-      justifyContent: "flex-start", // Align the button content to the left
-    }}
-  >
-    Dashboard
-  </Button>
-</ListItem>
 
-<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-  <Button
-    onClick={() => navigate('/testcreation')}
-    sx={{
-      color: "#003366", // Dark blue color
-      fontWeight: "bold",
-      textAlign: "left", // Align the text to the left
-      width: "100%",
-      fontSize: "16px", // Take up full width of the ListItem
-      justifyContent: "flex-start", // Align the button content to the left
-    }}
-  >
-    Test Creation
-  </Button>
-</ListItem>
-
-<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-  <Button
-    onClick={() => navigate('/questioncreation')}
-    sx={{
-      color: "#003366", // Dark blue color
-      fontWeight: "bold",
-      fontSize: "16px",
-      textAlign: "left", // Align the text to the left
-      width: "100%", // Take up full width of the ListItem
-      justifyContent: "flex-start", // Align the button content to the left
-    }}
-  >
-    Question Creation
-  </Button>
-</ListItem>
-
-<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-  <Button
-    onClick={() => navigate('/manage-tests')}
-    sx={{
-      color: "#003366", // Dark blue color
-      fontWeight: "bold",
-      fontSize: "16px",
-      textAlign: "left", // Align the text to the left
-      width: "100%", // Take up full width of the ListItem
-      justifyContent: "flex-start", // Align the button content to the left
-    }}
-  >
-    Manage Tests
-  </Button>
-</ListItem>
-
-<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-  <Button
-    onClick={() => navigate('/announcement')}
-    sx={{
-      color: "#003366", // Dark blue color
-      fontWeight: "bold",
-      fontSize: "16px",
-      textAlign: "left", // Align the text to the left
-      width: "100%", // Take up full width of the ListItem
-      justifyContent: "flex-start", // Align the button content to the left
-    }}
-  >
-    Announcements
-  </Button>
-</ListItem>
-
-<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-  <Button
-    onClick={() => navigate('/adminsettings')}
-    sx={{
-      color: "#003366", // Dark blue color
-      fontWeight: "bold",
-      fontSize: "16px",
-      textAlign: "left", // Align the text to the left
-      width: "100%", // Take up full width of the ListItem
-      justifyContent: "flex-start", // Align the button content to the left
-    }}
-  >
-    Settings
-  </Button>
-</ListItem>
-
-<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-  <Button
-    onClick={() => navigate('/logout')}
-    sx={{
-      color: "#003366", // Dark blue color
-      fontWeight: "bold",
-      fontSize: "16px",
-      textAlign: "left", // Align the text to the left
-      width: "100%", // Take up full width of the ListItem
-      justifyContent: "flex-start", // Align the button content to the left
-    }}
-  >
-    Logout
-  </Button>
-</ListItem>
-        </List>
-        </Box>
-      </Drawer>
       <AppBar position="fixed" sx={{ backgroundColor: "#003366", padding: "4px 8px" }}>
         <Toolbar sx={{ padding: "0" }}>
           <IconButton color="inherit" edge="start" sx={{ marginRight: 2 }} onClick={toggleSidebar}>
@@ -1608,11 +1482,7 @@ const handleSubmit = async () => {
           <Typography variant="h6" sx={{ flexGrow: 1, fontSize: "1rem" }}>
             Skill Bridge Online Test Platform
           </Typography>
-          <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
-          <Button color="inherit" onClick={() => navigate("/admin-profile")}>Admin Profile</Button>
-          <Button color="inherit" onClick={() => navigate("/manage-tests")}>Test List</Button>
-          <Button color="inherit" onClick={() => navigate("/adminsettings")}>Settings</Button>
-          <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
+
         </Toolbar>
       </AppBar>
       <Box sx={{ position: "fixed", top: "64px", bottom: "80px", left: 0, right: 0, display: "flex", flexDirection: "column", padding: "16px", overflowY: "auto", height: "calc(100vh - 144px)", width: "100vw", maxWidth: "100%", margin: 0 }}>
@@ -1735,4 +1605,4 @@ const handleSubmit = async () => {
   );
 };
 
-export default CreateNewTest;
+export default CreateTest;
