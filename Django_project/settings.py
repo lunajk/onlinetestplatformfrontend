@@ -172,20 +172,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Access token expiration time
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token expiration time
-    'ROTATE_REFRESH_TOKENS': False,  # Disable rotating refresh tokens
-    'BLACKLIST_AFTER_ROTATION': False,  # Disable blacklisting after token rotation
-    'ALGORITHM': 'HS256',  # JWT algorithm
-    'SIGNING_KEY': SECRET_KEY,  # Use Django's SECRET_KEY for signing JWTs
-    'VERIFYING_KEY': None,  # Set this if you have a public key for verification
-    'AUDIENCE': None,  # Optional audience (if you use it)
-    'ISSUER': None,  # Optional issuer (if you use it)
-}
-
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
+    "http://localhost:3000","https://onlinetestplatformfrontend.vercel.app",
 ]
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"  

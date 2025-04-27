@@ -73,6 +73,7 @@ class Test(models.Model):
     notification_emails = models.TextField(blank=True)  # Or CharField if you prefer
     is_public = models.BooleanField(default=True)
     is_proctored = models.BooleanField(default=False)
+    is_Duplicated = models.BooleanField(default=False)
     allow_retakes = models.BooleanField(default=False)
     allow_feedback = models.BooleanField(default=False)
 
