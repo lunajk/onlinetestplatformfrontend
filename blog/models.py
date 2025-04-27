@@ -73,7 +73,6 @@ class Test(models.Model):
     notification_emails = models.TextField(blank=True)  # Or CharField if you prefer
     is_public = models.BooleanField(default=True)
     is_proctored = models.BooleanField(default=False)
-    is_Duplicated = models.BooleanField(default=False)
     allow_retakes = models.BooleanField(default=False)
     allow_feedback = models.BooleanField(default=False)
 
@@ -454,7 +453,7 @@ class Announcement(models.Model):
         return self.title
 
 class Notification(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     announcement = models.ForeignKey(Announcement, on_delete=models.CASCADE)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
