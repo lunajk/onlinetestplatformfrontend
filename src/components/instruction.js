@@ -8,7 +8,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Webcam from "react-webcam";
 import * as faceapi from 'face-api.js';
 import axios from "axios";
-const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
+
 const InstructionPage = () => {
     const { uuid,randomString } = useParams();
     const navigate = useNavigate();
@@ -39,13 +39,13 @@ const InstructionPage = () => {
         const userToken = localStorage.getItem("user_token");
       
         if (uuid) {
-          axios.get(`${API_BASE_URL}/decode-test-uuid/${uuid}/`)
+          axios.get(`https://onlinetestcreationbackend.onrender.com/api/decode-test-uuid/${uuid}/`)
             .then(res => {
               const decodedId = res.data.test_id;
               setTestId(decodedId);
       
               // ✅ Fetch test data only after testId is available
-              return fetch(`${API_BASE_URL}/tests/${decodedId}/`, {
+              return fetch(`https://onlinetestcreationbackend.onrender.com/api/tests/${decodedId}/`, {
                 method: "GET",
                 headers: {
                   "Content-Type": "application/json",
@@ -215,7 +215,7 @@ const InstructionPage = () => {
         formData.append('descriptor', JSON.stringify(Array.from(descriptor)));
 
         try {
-            const response = await fetch(`${API_BASE_URL}/capture/`, {
+            const response = await fetch('https://onlinetestcreationbackend.onrender.com/api/capture/', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -275,7 +275,7 @@ const InstructionPage = () => {
 
         const userToken = localStorage.getItem("user_token");
 
-        fetch(`${API_BASE_URL}/tests/${testId}/save_consent/`, {
+        fetch(`https://onlinetestcreationbackend.onrender.com/api/tests/${testId}/save_consent/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
