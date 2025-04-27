@@ -153,7 +153,7 @@ const AdminDashboard = () => {
 
       const userToken = localStorage.getItem("user_token"); // Assuming token is stored in localStorage
   
-      const response = await axios.get(`${API_BASE_URL}/api/admin-notifications/`, {
+      const response = await axios.get(`${API_BASE_URL}/admin-notifications/`, {
         headers: {
           Authorization: `Token ${userToken}`, // Adjust if using Bearer token
         },
@@ -179,7 +179,7 @@ const AdminDashboard = () => {
       const userToken = localStorage.getItem("user_token");
   
       await axios.post(
-        `${API_BASE_URL}/api/admin-notifications/mark-read/`, 
+        `${API_BASE_URL}/admin-notifications/mark-read/`, 
         {}, 
         {
           headers: {
@@ -320,7 +320,7 @@ const AdminDashboard = () => {
           </ListItem>
 
           <ListItem> <Button onClick={() => navigate('/announcement')}
-            primary="Announcements"></Button>
+            primary="Announcements"/>
           </ListItem>
           <ListItem> <Button onClick={() => navigate('/adminsettings')}
              primary="Settings"></Button>

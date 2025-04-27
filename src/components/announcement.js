@@ -61,7 +61,7 @@ export default function AnnouncementsPage() {
       }
 
       try {
-        const response = await axios.get(`${API_BASE_URL}announcements/`, {
+        const response = await axios.get(`${API_BASE_URL}/announcements/`, {
           headers: { Authorization: `Token ${token}` },
         });
         setAnnouncements(response.data);
@@ -91,7 +91,7 @@ export default function AnnouncementsPage() {
   
     try {
       const response = await axios.post(
-        `${API_BASE_URL}announcements/`,
+        `${API_BASE_URL}/announcements/`,
         newAnnouncement,
         {
           headers: {
