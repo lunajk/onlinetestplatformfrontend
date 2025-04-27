@@ -8,6 +8,7 @@ from django.core.files.base import ContentFile
 import PyPDF2
 import csv
 import tempfile
+from blog.utils import send_congratulations_email
 from datetime import datetime
 from django.db import models
 from django.core.mail import send_mail
@@ -1439,31 +1440,32 @@ class TestAttemptViewSet(viewsets.ModelViewSet):
             question_id = answer_data.get("question")
             selected_option = answer_data.get("selected_option")
             question = get_object_or_404(Question, id=question_id)
-            UserAnswer.objects.create(attempt=attempt, question=question, selected_option=selected_option)
-            if str(selected_option).strip().lower() == str(question.correct_answer).strip().lower():
-                correct_answers += 1
-                attempt.total_questions = total_questions
-                attempt.correct_answers = correct_answers
-                attempt.score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
-                attempt.end_time = now()
-                if total_questions > 0 and len(answers_data) == total_questions:
-                    attempt.status = "completed"
-                    attempt.passed = attempt.score >= 50  # Pass if score is 50% or higher
-                                     # ✅ Email Notification if enabled
-                test = attempt.test
-                if test.receive_email_notifications and test.notification_emails:
-                    recipients = [email.strip() for email in test.notification_emails.split(",") if email.strip()]
-                    send_mail(
-                        subject=f"[Test Completed] {test.title}",
-                        message=f"User {request.user.username} ({request.user.email}) has completed the test '{test.title}' with a score of {attempt.score:.2f}%",
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=recipients,
-                        fail_silently=False,
-                        )
+        UserAnswer.objects.create(attempt=attempt, question=question, selected_option=selected_option)
+        if str(selected_option).strip().lower() == str(question.correct_answer).strip().lower():
+            correct_answers += 1
+            attempt.total_questions = total_questions
+            attempt.correct_answers = correct_answers
+            attempt.score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
+            attempt.end_time = now()
+        if total_questions > 0 and len(answers_data) == total_questions:
+            attempt.status = "completed"
+            attempt.passed = attempt.score >= 50  # Pass if score is 50% or higher
+        else:
+            attempt.status = "ongoing"
 
-                else:
-                    attempt.status = "ongoing"  # Keep it as ongoing if not all questions are answered
-                    attempt.save()
+        attempt.save()
+
+        test = attempt.test
+        if test.receive_email_notifications and test.notification_emails:
+            recipients = [email.strip() for email in test.notification_emails.split(",") if email.strip()]
+            send_mail(
+            subject=f"[Test Completed] {test.title}",
+            message=f"User {request.user.username} ({request.user.email}) has completed the test '{test.title}' with a score of {attempt.score:.2f}%",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipients,
+            fail_silently=False,
+        )
+            send_congratulations_email (request.user, attempt, test)
         return Response(TestAttemptSerializer(attempt).data, status=status.HTTP_200_OK)
 
     def perform_update(self, serializer):
