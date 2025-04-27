@@ -30,7 +30,7 @@ import {
 } from "@mui/material";
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/Image20210206041010-1024x518.png";
+import logo from "../assets/Image20250320122406.png";
 import TwitterIcon from '@mui/icons-material/Twitter';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
@@ -48,7 +48,7 @@ export default function AnnouncementsPage() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const API_BASE_URL = "https://onlinetestcreationbackend.onrender.com/api/"; // Ensure your Django URL config is correct
+  const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
   const token = localStorage.getItem("user_token");
   const navigate = useNavigate();
 
@@ -180,26 +180,30 @@ export default function AnnouncementsPage() {
               }}
             />
           )}
-          <List>
-                      <ListItem button onClick={() => navigate('/admin-dashboard')}>
-                        <ListItemText primary="Dashboard" />
-                      </ListItem>
-                      <ListItem button onClick={() => navigate('/testcreation')}>
-                        <ListItemText primary="Test Creation" />
-                      </ListItem>
-                      <ListItem button onClick={() => navigate('/manage-tests')}>
-                        <ListItemText primary="Manage Tests" />
-                      </ListItem>
-                      <ListItem button onClick={() => navigate('/announcement')}>
-                        <ListItemText primary="Announcements" />
-                      </ListItem>
-                      <ListItem button onClick={() => navigate('/adminsettings')}>
-                        <ListItemText primary="Settings" />
-                      </ListItem>
-                      <ListItem button onClick={() => navigate('/logout')}>
-                        <ListItemText primary="Logout" />
-                      </ListItem>
-          </List>
+ <List>
+          <ListItem> <Button onClick={() => navigate('/admin-dashboard')}
+             primary="Dashboard"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/testcreation')}
+           primary="Test Creation"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/questioncreation')}
+           primary="Question Creation"></Button>
+          </ListItem>
+          <ListItem button onClick={() => navigate('/manage-tests')}>
+            <ListItemText primary="Manage Tests" />
+          </ListItem>
+
+          <ListItem> <Button onClick={() => navigate('/announcement')}
+            primary="Announcements"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/adminsettings')}
+             primary="Settings"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/logout')}
+            primary="Logout"></Button>
+          </ListItem>
+        </List>
         </Box>
       </Drawer>
 

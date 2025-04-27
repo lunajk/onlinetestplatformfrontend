@@ -22,7 +22,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
-import logo from "../assets/Image20210206041010-1024x518.png";
+import logo from "../assets/Image20250320122406.png";
 import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
@@ -217,10 +217,10 @@ const Profile = () => {
             Skill Bridge Online Test Platform
           </Typography>
           <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
-          <Button color="inherit" onClick={() => navigate("/user-profile")}>Profile</Button>
-          <Button color="inherit" onClick={() => navigate("/test-list")}>Test list</Button>
-          <Button color="inherit" onClick={() => navigate("/settings")}>Settings</Button>
-          <Button color="inherit" onClick={handleLogout}>Logout</Button>
+          <Button color="inherit" onClick={() => navigate("/userprofile")}>User Profile</Button>
+          <Button color="inherit" onClick={() => navigate("/attempted-tests")}>Test List</Button>
+          <Button color="inherit" onClick={() => navigate("/usersetting")}>Settings</Button>
+          <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
         </Toolbar>
       </AppBar>
     );
@@ -244,23 +244,26 @@ const Profile = () => {
               }}
             />
           )}
-          <List>
-            <ListItem button onClick={() => navigate('/user-dashboard')}>
-              <ListItemText primary="Dashboard" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/attempted-tests')}>
-              <ListItemText primary="Attempted Tests" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/performancehistory')}>
-              <ListItemText primary="Performance History" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/usersetting')}>
-              <ListItemText primary="Settings" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/logout')}>
-              <ListItemText primary="Logout" />
-            </ListItem>
-          </List>
+ <List>
+          <ListItem> <Button onClick={() => navigate('/user-dashboard')}
+             primary="Dashboard"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/testcreation')}
+           primary="Test Creation"></Button>
+          </ListItem>
+          <ListItem button onClick={() => navigate('/attempted-tests')}>
+            <ListItemText primary="Attempted Tests" />
+          </ListItem>
+          <ListItem button onClick={() => navigate('/performancehistory')}>
+            <ListItemText primary="Performance History" />
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/usersetting')}
+             primary="Settings"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/logout')}
+            primary="Logout"></Button>
+          </ListItem>
+        </List>
         </Box>
       </Drawer>
 

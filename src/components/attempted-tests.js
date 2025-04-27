@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import logo from "../assets/Image20210206041010-1024x518.png";
+import logo from "../assets/Image20250320122406.png";
 import {
   AppBar,
   Toolbar,
@@ -215,7 +215,7 @@ const sendDataToAttemptedTestsAPI = async (testId, testTitle, testSubject, perce
           </Typography>
           <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
           <Button color="inherit" onClick={() => navigate("/userprofile")}>User Profile</Button>
-          <Button color="inherit" onClick={() => navigate("/available-tests")}>Test List</Button>
+          <Button color="inherit" onClick={() => navigate("/attempted-tests")}>Test List</Button>
           <Button color="inherit" onClick={() => navigate("/usersetting")}>Settings</Button>
           <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
         </Toolbar>
@@ -235,23 +235,26 @@ const sendDataToAttemptedTestsAPI = async (testId, testTitle, testSubject, perce
               }}
             />
           )}
-          <List>
-            <ListItem button onClick={() => navigate('/user-dashboard')}>
-              <ListItemText primary="Dashboard" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/attempted-tests')}>
-              <ListItemText primary="Attempted Tests" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/performancehistory')}>
-              <ListItemText primary="Performance History" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/usersetting')}>
-              <ListItemText primary="Settings" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/logout')}>
-              <ListItemText primary="Logout" />
-            </ListItem>
-          </List>
+ <List>
+          <ListItem> <Button onClick={() => navigate('/user-dashboard')}
+             primary="Dashboard"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/testcreation')}
+           primary="Test Creation"></Button>
+          </ListItem>
+          <ListItem button onClick={() => navigate('/attempted-tests')}>
+            <ListItemText primary="Attempted Tests" />
+          </ListItem>
+          <ListItem button onClick={() => navigate('/performancehistory')}>
+            <ListItemText primary="Performance History" />
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/usersetting')}
+             primary="Settings"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/logout')}
+            primary="Logout"></Button>
+          </ListItem>
+        </List>
         </Box>
       </Drawer>
 

@@ -26,7 +26,7 @@ import TwitterIcon from "@mui/icons-material/Twitter";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import MuiAlert from '@mui/material/Alert';
-import logo from "../assets/Image20210206041010-1024x518.png";
+import logo from "../assets/Image20250320122406.png";
 import { useParams } from "react-router-dom"; 
 const API_BASE_URL = "https://onlinetestcreationbackend.onrender.com/api/questions/";
 
@@ -163,7 +163,7 @@ const EditTestPage = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`https://onlinetestcreationbackend.onrender.com/api/tests/${testId}/`, {
+      const response = await axios.get(`${API_BASE_URL}/tests/${testId}/`, {
         headers: { Authorization: `Token ${token()}` },
       });
       
@@ -196,11 +196,11 @@ const EditTestPage = () => {
                 <Typography variant="h6" sx={{ flexGrow: 1, fontSize: "1rem" }}>
                     Skill Bridge Online Test Platform
                 </Typography>
-                <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
-                <Button color="inherit" onClick={() => navigate("/admin-profile")}>Admin profile</Button>
-                <Button color="inherit" onClick={() => navigate("/manage-tests")}>Test List</Button>
-                <Button color="inherit" onClick={() => navigate("/adminsettings")}>Settings</Button>
-                <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
+          <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
+          <Button color="inherit" onClick={() => navigate("/admin-profile")}>Admin Profile</Button>
+          <Button color="inherit" onClick={() => navigate("/manage-tests")}>Test List</Button>
+          <Button color="inherit" onClick={() => navigate("/adminsettings")}>Settings</Button>
+          <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
             </Toolbar>
       </AppBar>
 
@@ -213,31 +213,28 @@ const EditTestPage = () => {
               style={{ maxWidth: "80%", height: "auto", marginBottom: "12px", borderRadius: "8px" }}
             />
           )}
-        <List>
-          <ListItem button onClick={() => navigate('/admin-dashboard')}>
-            <ListItemText primary="Dashboard" />
+ <List>
+          <ListItem> <Button onClick={() => navigate('/admin-dashboard')}
+             primary="Dashboard"></Button>
           </ListItem>
-          <ListItem button onClick={() => navigate('/testcreation')}>
-            <ListItemText primary="Test Creation" />
+          <ListItem> <Button onClick={() => navigate('/testcreation')}
+           primary="Test Creation"></Button>
           </ListItem>
-          <ListItem button onClick={() => navigate('/questioncreation')}>
-            <ListItemText primary="Question Creation" />
+          <ListItem> <Button onClick={() => navigate('/questioncreation')}
+           primary="Question Creation"></Button>
           </ListItem>
           <ListItem button onClick={() => navigate('/manage-tests')}>
             <ListItemText primary="Manage Tests" />
           </ListItem>
 
-          <ListItem button onClick={() => navigate('/announcement')}>
-            <ListItemText primary="Announcements" />
+          <ListItem> <Button onClick={() => navigate('/announcement')}
+            primary="Announcements"></Button>
           </ListItem>
-          <ListItem button onClick={() => navigate('/adminsettings')}>
-            <ListItemText primary="Settings" />
+          <ListItem> <Button onClick={() => navigate('/adminsettings')}
+             primary="Settings"></Button>
           </ListItem>
-          <ListItem button onClick={() => {
-            localStorage.removeItem('user_token');
-            navigate('/login');
-          }}>
-            <ListItemText primary="Logout" />
+          <ListItem> <Button onClick={() => navigate('/logout')}
+            primary="Logout"></Button>
           </ListItem>
         </List>
         </Box>

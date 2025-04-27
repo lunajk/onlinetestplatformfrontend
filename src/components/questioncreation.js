@@ -12,6 +12,7 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; 
 import logo from "../assets/Image20250320122406.png";
+const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const QuestionCreator = () => {
   const [questions, setQuestions] = useState([]);
   const [newOption, setNewOption] = useState('');
@@ -28,7 +29,7 @@ const QuestionCreator = () => {
     if (!token) return;
   
     try {
-      const response = await axios.get('https://onlinetestcreationbackend.onrender.com/api/questions/', {
+      const response = await axios.get(`${API_BASE_URL}/questions/`, {
         headers: { 'Authorization': `Token ${token}` },
       });
   
@@ -78,7 +79,7 @@ const QuestionCreator = () => {
       };
   
       try {
-        const response = await axios.post('https://onlinetestcreationbackend.onrender.com/api/questions/', questionData, {
+        const response = await axios.post(`${API_BASE_URL}/questions/`, questionData, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Token ${token}`,
@@ -175,30 +176,30 @@ const QuestionCreator = () => {
                     }}
                   />
                 )}
-          <List>
-                      <ListItem button onClick={() => navigate('/admin-dashboard')}>
-                        <ListItemText primary="Dashboard" />
-                      </ListItem>
-                      <ListItem button onClick={() => navigate('/testcreation')}>
-                        <ListItemText primary="Test Creation" />
-                      </ListItem>
-                                  <ListItem button onClick={() => navigate('/questioncreation')}>
-                                    <ListItemText primary="Question Creation" />
-                                  </ListItem>
-                      <ListItem button onClick={() => navigate('/manage-tests')}>
-                        <ListItemText primary="Manage Tests" />
-                      </ListItem>
+ <List>
+          <ListItem> <Button onClick={() => navigate('/admin-dashboard')}
+             primary="Dashboard"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/testcreation')}
+           primary="Test Creation"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/questioncreation')}
+           primary="Question Creation"></Button>
+          </ListItem>
+          <ListItem button onClick={() => navigate('/manage-tests')}>
+            <ListItemText primary="Manage Tests" />
+          </ListItem>
 
-                      <ListItem button onClick={() => navigate('/announcement')}>
-                        <ListItemText primary="Announcements" />
-                      </ListItem>
-                      <ListItem button onClick={() => navigate('/adminsettings')}>
-                        <ListItemText primary="Settings" />
-                      </ListItem>
-                      <ListItem button onClick={() => navigate('/logout')}>
-                        <ListItemText primary="Logout" />
-                      </ListItem>
-            </List>
+          <ListItem> <Button onClick={() => navigate('/announcement')}
+            primary="Announcements"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/adminsettings')}
+             primary="Settings"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/logout')}
+            primary="Logout"></Button>
+          </ListItem>
+        </List>
           </Box>
         </Drawer>
 

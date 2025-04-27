@@ -19,13 +19,12 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Dialog from '@mui/material/Dialog';
-
 import { PieChart,Pie, Tooltip, Cell, Legend } from "recharts";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const COLORS = ["#003366", "#0088FE", "#FFBB28", "#FF8042", "#00C49F"];
 const AdminDashboard = () => {
   const [userData, setUserData] = useState({});
-  const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [feedback, setFeedback] = useState([]);
@@ -87,18 +86,18 @@ const AdminDashboard = () => {
       };
 
       try {
-        const userResponse = await axios.get('https://onlinetestcreationbackend.onrender.com/api/userss/', { headers });
+        const userResponse = await axios.get(`${API_BASE_URL}/userss/`, { headers });
         setUserData(userResponse.data);
-        const dashboardResponse = await axios.get('https://onlinetestcreationbackend.onrender.com/api/dashboard-overview/', { headers });
+        const dashboardResponse = await axios.get(`${API_BASE_URL}/dashboard-overview/`, { headers });
         setDashboardData(dashboardResponse.data);
-        const userManagementResponse = await axios.get("https://onlinetestcreationbackend.onrender.com/api/user-management-stats/", { headers });
+        const userManagementResponse = await axios.get(`${API_BASE_URL}/user-management-stats/`, { headers });
         setUserManagement(userManagementResponse.data);
-        const response = await axios.get('https://onlinetestcreationbackend.onrender.com/api/tests-data/', { headers });
+        const response = await axios.get(`${API_BASE_URL}/tests-data/`, { headers });
         setAnalyticsData(response.data);
 
         const [ feedbacksResponse] = await Promise.all([
           
-          axios.get('https://onlinetestcreationbackend.onrender.com/api/feedbacks/', { headers }),
+          axios.get(`${API_BASE_URL}/feedbacks/`, { headers }),
         ]);
 
         setUserManagement(userManagementResponse.data);
@@ -106,14 +105,14 @@ const AdminDashboard = () => {
       } catch (error) {
         console.error("Error fetching data", error);
       } finally {
-        setLoading(false);
+      
       }
     };
 
   useEffect(() => {
     const fetchTests = async () => {
       try {
-        const response = await axios.get('https://onlinetestcreationbackend.onrender.com/api/tests-management/');
+        const response = await axios.get(`${API_BASE_URL}/tests-management/`);
         setTests(response.data);
       } catch (error) {
         console.error("Error fetching tests:", error);
@@ -126,7 +125,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchCompletionRates = async () => {
       try {
-        const response = await axios.get('https://onlinetestcreationbackend.onrender.com/api/test-completion-rates/');
+        const response = await axios.get(`${API_BASE_URL}/test-completion-rates/`);
         const completionRates = response.data;
 
         // Ensure completionRates is an object with expected structure
@@ -151,10 +150,10 @@ const AdminDashboard = () => {
 
   const fetchNotifications = async () => {
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || "https://onlinetestcreationbackend.onrender.com";
+
       const userToken = localStorage.getItem("user_token"); // Assuming token is stored in localStorage
   
-      const response = await axios.get(`${apiUrl}/api/admin-notifications/`, {
+      const response = await axios.get(`${API_BASE_URL}/api/admin-notifications/`, {
         headers: {
           Authorization: `Token ${userToken}`, // Adjust if using Bearer token
         },
@@ -177,11 +176,10 @@ const AdminDashboard = () => {
   
     // Mark all notifications as read
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || "https://onlinetestcreationbackend.onrender.com";
       const userToken = localStorage.getItem("user_token");
   
       await axios.post(
-        `${apiUrl}/api/admin-notifications/mark-read/`, 
+        `${API_BASE_URL}/api/admin-notifications/mark-read/`, 
         {}, 
         {
           headers: {
@@ -208,7 +206,7 @@ const AdminDashboard = () => {
     const userToken = localStorage.getItem("user_token");
 
     axios
-      .get(`https://onlinetestcreationbackend.onrender.com/api/users/${userData.id}/`, {
+      .get(`${API_BASE_URL}/users/${userData.id}/`, {
         headers: { Authorization: `Token ${userToken}` },
       })
       
@@ -218,12 +216,8 @@ const AdminDashboard = () => {
       .catch((error) => {
         console.error("Error fetching user profile data:", error);
       });
-  }, [userData.id]); // ✅ Depend on `userData` to ensure it has been fetched first
-
-  if (loading) return <Typography>Loading...</Typography>;
-
+  }, [userData.id]); // ✅ Depend on `userData` to ensure it has been fetched firs
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  
   const userManagementData = [
     {
       label: "Total Users",
@@ -312,30 +306,27 @@ const AdminDashboard = () => {
             />
           )}
         <List>
-          <ListItem button onClick={() => navigate('/admin-dashboard')}>
-            <ListItemText primary="Dashboard" />
+          <ListItem> <Button onClick={() => navigate('/admin-dashboard')}
+             primary="Dashboard"></Button>
           </ListItem>
-          <ListItem button onClick={() => navigate('/testcreation')}>
-            <ListItemText primary="Test Creation" />
+          <ListItem> <Button onClick={() => navigate('/testcreation')}
+           primary="Test Creation"></Button>
           </ListItem>
-          <ListItem button onClick={() => navigate('/questioncreation')}>
-            <ListItemText primary="Question Creation" />
+          <ListItem> <Button onClick={() => navigate('/questioncreation')}
+           primary="Question Creation"></Button>
           </ListItem>
           <ListItem button onClick={() => navigate('/manage-tests')}>
             <ListItemText primary="Manage Tests" />
           </ListItem>
 
-          <ListItem button onClick={() => navigate('/announcement')}>
-            <ListItemText primary="Announcements" />
+          <ListItem> <Button onClick={() => navigate('/announcement')}
+            primary="Announcements"></Button>
           </ListItem>
-          <ListItem button onClick={() => navigate('/adminsettings')}>
-            <ListItemText primary="Settings" />
+          <ListItem> <Button onClick={() => navigate('/adminsettings')}
+             primary="Settings"></Button>
           </ListItem>
-          <ListItem button onClick={() => {
-            localStorage.removeItem('user_token');
-            navigate('/login');
-          }}>
-            <ListItemText primary="Logout" />
+          <ListItem> <Button onClick={() => navigate('/logout')}
+            primary="Logout"></Button>
           </ListItem>
         </List>
         </Box>

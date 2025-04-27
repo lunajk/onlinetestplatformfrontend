@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { FormControl, FormControlLabel, Radio, RadioGroup, Checkbox } from "@mui/material";
 import WebcamProctoring from './face'; 
 // Styles
+const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const styles = `.test-container {
     font-family: Arial, sans-serif;
     background-color: #f8f8f8;
@@ -123,8 +124,6 @@ const questionTypes = {
     TRUE_FALSE: "truefalse",
     FILL_IN_THE_BLANKS: "fillintheblanks",
 };
-
-const API_BASE_URL = "https://onlinetestcreationbackend.onrender.com/api";
 
 export default function OnlineTestPage() {
     const { uuid } = useParams(); // ✅ Now we use uuid from the URL

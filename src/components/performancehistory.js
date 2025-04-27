@@ -12,7 +12,7 @@ import InstagramIcon from "@mui/icons-material/Instagram";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/Image20250320122406.png";
 import axios from "axios"; // Import Axios
-
+const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const TestHistory = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -31,7 +31,7 @@ const TestHistory = () => {
 
     try {
         // Fetch performance history
-        const response = await fetch("https://onlinetestcreationbackend.onrender.com/api/performance-history/", {
+        const response = await fetch(`${API_BASE_URL}/performance-history/`, {
             headers: { Authorization: `Token ${token}` },
         });
         if (!response.ok) {
@@ -73,7 +73,7 @@ const TestHistory = () => {
     }
 
     try {
-      const response = await axios.get("https://onlinetestcreationbackend.onrender.com/api/performance-history/", performanceData, {
+      const response = await axios.get(`${API_BASE_URL}/performance-history/`, performanceData, {
         headers: { Authorization: `Token ${token}` },
       });
 
@@ -128,8 +128,8 @@ const TestHistory = () => {
           <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
           <Button color="inherit" onClick={() => navigate("/userprofile")}>User Profile</Button>
           <Button color="inherit" onClick={() => navigate("/attempted-tests")}>Test List</Button>
-          <Button color="inherit" onClick={() => navigate("/usersetting")}>Setting</Button>
-          <Button color="inherit" onClick={() => navigate("/Logout")}>Logout</Button>
+          <Button color="inherit" onClick={() => navigate("/usersetting")}>Settings</Button>
+          <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
         </Toolbar>
       </AppBar>
   
@@ -148,24 +148,26 @@ const TestHistory = () => {
               }}
             />
           )}
-          <List>
-            <ListItem button onClick={() => navigate('/user-dashboard')}>
-              <ListItemText primary="Dashboard" />
-            </ListItem>
-
-            <ListItem button onClick={() => navigate('/attempted-tests')}>
-              <ListItemText primary="Attempted Tests" />
-            </ListItem>
-                        <ListItem button onClick={() => navigate('/performancehistory')}>
-                          <ListItemText primary="Performance History" />
-                        </ListItem>
-            <ListItem button onClick={() => navigate('/usersetting')}>
-              <ListItemText primary="Settings" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/logout')}>
-              <ListItemText primary="Logout" />
-            </ListItem>
-          </List>
+ <List>
+          <ListItem> <Button onClick={() => navigate('/user-dashboard')}
+             primary="Dashboard"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/testcreation')}
+           primary="Test Creation"></Button>
+          </ListItem>
+          <ListItem button onClick={() => navigate('/attempted-tests')}>
+            <ListItemText primary="Attempted Tests" />
+          </ListItem>
+          <ListItem button onClick={() => navigate('/performancehistory')}>
+            <ListItemText primary="Performance History" />
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/usersetting')}
+             primary="Settings"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/logout')}
+            primary="Logout"></Button>
+          </ListItem>
+        </List>
         </Box>
       </Drawer>
   

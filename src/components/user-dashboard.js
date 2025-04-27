@@ -14,6 +14,7 @@ import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineC
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import DeleteIcon from "@mui/icons-material/Delete"; // Import the Delete icon
 import MenuIcon from "@mui/icons-material/Menu";
+const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const UserDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userData, setUserData] = useState({});
@@ -57,7 +58,7 @@ const onClose = () => {
       };
 
       try {
-        const response = await axios.get("https://onlinetestcreationbackend.onrender.com/api/achievements/", { headers });
+        const response = await axios.get(`${API_BASE_URL}/achievements/`, { headers });
         setAchievements(response.data.achievements || []); // Ensure it's an array
       } catch (err) {
         console.error("Error fetching achievements:", err);
@@ -77,10 +78,10 @@ const onClose = () => {
   
       try {
         const [userRes, activitiesRes, testsRes, notificationsRes] = await Promise.all([
-          axios.get("https://onlinetestcreationbackend.onrender.com/api/userss/", { headers }),
-          axios.get("https://onlinetestcreationbackend.onrender.com/api/recent-activities/", { headers }),
-          axios.get("https://onlinetestcreationbackend.onrender.com/api/completed-tests/", { headers }),
-          axios.get("https://onlinetestcreationbackend.onrender.com/api/notifications/", { headers })
+          axios.get(`${API_BASE_URL}/userss/`, { headers }),
+          axios.get(`${API_BASE_URL}/recent-activities/`, { headers }),
+          axios.get(`${API_BASE_URL}/completed-tests/`, { headers }),
+          axios.get(`${API_BASE_URL}/notifications/`, { headers })
         ]);
   
         setUserData(userRes.data);
@@ -107,7 +108,7 @@ const onClose = () => {
       const userToken = localStorage.getItem("user_token");
   
       axios
-        .get(`https://onlinetestcreationbackend.onrender.com/api/users/${userData.id}/`, {
+        .get(`${API_BASE_URL}/users/${userData.id}/`, {
           headers: { Authorization: `Token ${userToken}` },
         })
         .then((response) => {
@@ -128,7 +129,7 @@ const onClose = () => {
         };
   
         try {
-          const response = await axios.get("https://onlinetestcreationbackend.onrender.com/api/performance-stats/", { headers });
+          const response = await axios.get(`${API_BASE_URL}/performance-stats/`, { headers });
           setPerformanceStats(response.data || []); // Ensure it's an array
         } catch (error) {
           console.error("Error fetching performance stats:", error);
@@ -169,7 +170,7 @@ const onClose = () => {
       };
   
       try {
-        const response = await axios.get("https://onlinetestcreationbackend.onrender.com/api/notifications/", { headers });
+        const response = await axios.get(`${API_BASE_URL}/notifications/`, { headers });
         // Remove duplicate notifications by filtering unique announcement titles
         const allNotifications = response.data;
         const uniqueNotifications = allNotifications.reduce((acc, notif) => {
@@ -199,7 +200,7 @@ const onClose = () => {
       };
     
       try {
-        await axios.post("https://onlinetestcreationbackend.onrender.com/api/notifications/mark-as-read/", {}, { headers });
+        await axios.post(`${API_BASE_URL}/notifications/mark-as-read/`, {}, { headers });
     
         // Update UI: Mark notifications as read
         setNotifications((prevNotifications) =>
@@ -230,7 +231,7 @@ const onClose = () => {
     };
   
     try {
-      await axios.delete(`https://onlinetestcreationbackend.onrender.com/api/recent-activities/${activityId}/`, { headers });
+      await axios.delete(`${API_BASE_URL}/recent-activities/${activityId}/`, { headers });
   
       // Remove the deleted activity from state
       setRecentActivities(recentActivities.filter(activity => activity.id !== activityId));
@@ -252,7 +253,7 @@ const onClose = () => {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>Skill Bridge Dashboard</Typography>
           <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
           <Button color="inherit" onClick={() => navigate("/userprofile")}>User Profile</Button>
-          <Button color="inherit" onClick={() => navigate("/manage-tests")}>Test List</Button>
+          <Button color="inherit" onClick={() => navigate("/attempted-tests")}>Test List</Button>
           <Button color="inherit" onClick={() => navigate("/usersetting")}>Settings</Button>
           <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
           <IconButton color="inherit" onClick={handleOpenNotifications}>
@@ -266,15 +267,27 @@ const onClose = () => {
       <Drawer open={isSidebarOpen} onClose={toggleSidebar}>
         <Box sx={{ width: 250, textAlign: "center", padding: "16px" }}>
           <img src={logo} alt="Logo" style={{ maxWidth: "100%", height: "auto", marginBottom: "16px" }} />
-          <List>
-            <ListItem button onClick={() => navigate('/user-dashboard')}><ListItemText primary="Dashboard" /></ListItem>
-            <ListItem button onClick={() => navigate('/attempted-tests')}><ListItemText primary="Attempted Tests" /></ListItem>
-            <ListItem button onClick={() => navigate('/Testcreation')}><ListItemText primary="Test Creation" /></ListItem>
-            <ListItem button onClick={() => navigate('/performancehistory')}><ListItemText primary="Performance History" /></ListItem>
 
-            <ListItem button onClick={() => navigate('/usersetting')}><ListItemText primary="Settings" /></ListItem>
-            <ListItem button onClick={() => navigate('/logout')}><ListItemText primary="Logout" /></ListItem>
-          </List>
+ <List>
+          <ListItem> <Button onClick={() => navigate('/user-dashboard')}
+             primary="Dashboard"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/testcreation')}
+           primary="Test Creation"></Button>
+          </ListItem>
+          <ListItem button onClick={() => navigate('/attempted-tests')}>
+            <ListItemText primary="Attempted Tests" />
+          </ListItem>
+          <ListItem button onClick={() => navigate('/performancehistory')}>
+            <ListItemText primary="Performance History" />
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/usersetting')}
+             primary="Settings"></Button>
+          </ListItem>
+          <ListItem> <Button onClick={() => navigate('/logout')}
+            primary="Logout"></Button>
+          </ListItem>
+        </List>
         </Box>
       </Drawer>
       <Modal open={isNotificationOpen} onClose={handleCloseNotifications}>

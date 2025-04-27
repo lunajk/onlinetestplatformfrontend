@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box, Typography, TextField, Button, Grid } from "@mui/material";
 import axios from "axios";
-
+const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const ContactPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -13,7 +13,7 @@ const ContactPage = () => {
 // Function to fetch admin notifications
 const fetchAdminNotifications = async () => {
   try {
-    const apiUrl = process.env.REACT_APP_API_URL || "https://onlinetestcreationbackend.onrender.com";
+    
     
     // Retrieve user_token from localStorage (or wherever you store it after login)
     const userToken = localStorage.getItem("user_token");
@@ -23,7 +23,7 @@ const fetchAdminNotifications = async () => {
       return;
     }
 
-    const response = await axios.get(`${apiUrl}/api/admin-notifications/`, {
+    const response = await axios.get(`${API_BASE_URL}/api/admin-notifications/`, {
       headers: {
         Authorization: `Token ${userToken}`, // Add user token in headers
       },
@@ -49,9 +49,9 @@ const handleSubmit = async (event) => {
   }
 
   try {
-    const apiUrl = process.env.REACT_APP_API_URL || "https://onlinetestcreationbackend.onrender.com";
+ 
 
-    await axios.post(`${apiUrl}/api/contact-submissions/`, {
+    await axios.post(`${API_BASE_URL}/api/contact-submissions/`, {
       name,
       email,
       message,

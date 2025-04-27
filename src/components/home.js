@@ -44,7 +44,7 @@ import image6 from '../assets/6.jfif';
 import image7 from '../assets/7.jfif';
 import image9 from '../assets/9.jfif';
 import image10 from '../assets/10.jfif';
-
+const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const HomePage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -61,7 +61,7 @@ const HomePage = () => {
    
 
     axios
-      .get("https://onlinetestcreationbackend.onrender.com/api/performers/")
+      .get(`${API_BASE_URL}/performers/`)
       .then((response) => {
         setPerformers(response.data);
       })
@@ -70,7 +70,7 @@ const HomePage = () => {
       });
 
     axios
-      .get("https://onlinetestcreationbackend.onrender.com/api/features/")
+      .get(`${API_BASE_URL}/features/`)
       .then((response) => {
         setFeatures(response.data);
       })
@@ -80,31 +80,31 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    axios.get("https://onlinetestcreationbackend.onrender.com/api/testimonials/")
+    axios.get(`${API_BASE_URL}/testimonials/`)
       .then(response => setTestimonials(response.data))
       .catch(error => console.error("Error fetching testimonials:", error));
   }, []);
 
   const testimonials = [
-    { id: 1, name: 'John Doe', profile_picture_url: image7, message: 'This platform is amazing!' },
-    { id: 2, name: 'Jane Smith', profile_picture_url: image3, message: 'I learned so much from the tests!' },
-    { id: 3, name: 'Michael Johnson', profile_picture_url: image10, message: 'The courses here are well-structured and easy to follow.' },
+    { id: 1, name: 'Jessi Doe', profile_picture_url: image7, message: 'This platform is amazing!' },
+    { id: 2, name: 'John Smith', profile_picture_url: image3, message: 'I learned so much from the tests!' },
+    { id: 3, name: 'Michelle Johnson', profile_picture_url: image10, message: 'The courses here are well-structured and easy to follow.' },
     { id: 5, name: 'Emily Davis', profile_picture_url: image5, message: 'I love the interactive exercises and quizzes!' },
-    { id: 6, name: 'Sophia Martinez', profile_picture_url: image1, message: 'A must-visit platform for anyone looking to upskill!' },
-    { id: 7, name: 'James Andriya', profile_picture_url: image9, message: 'The best online learning experience I’ve had!' },
+    { id: 6, name: 'Stephen Martinez', profile_picture_url: image1, message: 'A must-visit platform for anyone looking to upskill!' },
+    { id: 7, name: 'Jane Andriya', profile_picture_url: image9, message: 'The best online learning experience I’ve had!' },
     { id: 9, name: 'William Brown', profile_picture_url: image6, message: 'Fantastic resources and easy-to-understand lessons.' },
-    { id: 10, name: 'Isabella White',profile_picture_url: image1, message: 'Helped me improve my skills tremendously!' },
+    { id: 10, name: 'Isaiyah White',profile_picture_url: image1, message: 'Helped me improve my skills tremendously!' },
   ];
 
   const performers = [
-    { id: 1, name: 'Alice Johnson', profile_picture_url: image1, achievement: 'Top Scorer in Mathematics' },
-    { id: 2, name: 'Bob Smith', profile_picture_url: image2, achievement: 'Outstanding Performance in Science' },
-    { id: 3, name: 'Charlie Brown', profile_picture_url: image3, achievement: 'Excellence in Literature' },
+    { id: 1, name: 'Alan Johnson', profile_picture_url: image1, achievement: 'Top Scorer in Mathematics' },
+    { id: 2, name: 'Navier Smith', profile_picture_url: image2, achievement: 'Outstanding Performance in Science' },
+    { id: 3, name: 'Rashta Brown', profile_picture_url: image3, achievement: 'Excellence in Literature' },
     { id: 5, name: 'Ethan Williams', profile_picture_url: image5, achievement: 'Champion in Coding Competitions' },
-    { id: 6, name: 'Fiona Garcia', profile_picture_url: image6, achievement: 'Top Innovator in Robotics' },
-    { id: 7, name: 'George Lee', profile_picture_url: image7, achievement: 'Best Research Paper in Physics' },
-    { id: 9, name: 'Ian Thompson', profile_picture_url: image9, achievement: 'Top Speaker in Debate Championships' },
-    { id: 10, name: 'Julia Martinez', profile_picture_url: image10, achievement: 'Gold Medalist in Sports' },
+    { id: 6, name: 'Ian Thompson', profile_picture_url: image6, achievement: 'Top Innovator in Robotics' },
+    { id: 7, name: 'Georgia Lee', profile_picture_url: image7, achievement: 'Best Research Paper in Physics' },
+    { id: 9, name: 'Fiona Garcia', profile_picture_url: image9, achievement: 'Top Speaker in Debate Championships' },
+    { id: 10, name: 'Julian Martinez', profile_picture_url: image10, achievement: 'Gold Medalist in Sports' },
   ];
 
   const HeroSection = () => (

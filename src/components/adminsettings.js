@@ -41,7 +41,7 @@ const AdminSettingsPage = () => {
   const [settingsId, setSettingsId] = useState(null); // State to hold the settings ID
 
   const navigate = useNavigate();
-  const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api/admin-settings/'; // Adjust the URL as needed
+  const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 
   useEffect(() => {
     document.body.style.backgroundColor = darkMode ? "#121212" : "#f8f9fa";
@@ -234,31 +234,28 @@ const AdminSettingsPage = () => {
           />
         </Box>
 
-        <List>
-          <ListItem button onClick={() => navigate('/admin-dashboard')}>
-            <ListItemText primary="Dashboard" />
+ <List>
+          <ListItem> <Button onClick={() => navigate('/admin-dashboard')}
+             primary="Dashboard"></Button>
           </ListItem>
-          <ListItem button onClick={() => navigate('/testcreation')}>
-            <ListItemText primary="Test Creation" />
+          <ListItem> <Button onClick={() => navigate('/testcreation')}
+           primary="Test Creation"></Button>
           </ListItem>
-          <ListItem button onClick={() => navigate('/questioncreation')}>
-            <ListItemText primary="Question Creation" />
+          <ListItem> <Button onClick={() => navigate('/questioncreation')}
+           primary="Question Creation"></Button>
           </ListItem>
           <ListItem button onClick={() => navigate('/manage-tests')}>
             <ListItemText primary="Manage Tests" />
           </ListItem>
 
-          <ListItem button onClick={() => navigate('/announcement')}>
-            <ListItemText primary="Announcements" />
+          <ListItem> <Button onClick={() => navigate('/announcement')}
+            primary="Announcements"></Button>
           </ListItem>
-          <ListItem button onClick={() => navigate('/adminsettings')}>
-            <ListItemText primary="Settings" />
+          <ListItem> <Button onClick={() => navigate('/adminsettings')}
+             primary="Settings"></Button>
           </ListItem>
-          <ListItem button onClick={() => {
-            localStorage.removeItem('user_token');
-            navigate('/login');
-          }}>
-            <ListItemText primary="Logout" />
+          <ListItem> <Button onClick={() => navigate('/logout')}
+            primary="Logout"></Button>
           </ListItem>
         </List>
       </Drawer>
@@ -280,11 +277,11 @@ const AdminSettingsPage = () => {
             <Typography variant="h6" sx={{ flexGrow: 1, fontSize: "1rem" }}>
               SmartBridge Online Test Platform
             </Typography>
-            <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
-            <Button color="inherit" onClick={() => navigate("/admin-profile")}>Admin Profile</Button>
-            <Button color="inherit" onClick={() => navigate("/manage-tests")}>Test List</Button>
-            <Button color="inherit" onClick={() => navigate("/adminsettings")}>Settings</Button>
-            <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
+          <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
+          <Button color="inherit" onClick={() => navigate("/admin-profile")}>Admin Profile</Button>
+          <Button color="inherit" onClick={() => navigate("/manage-tests")}>Test List</Button>
+          <Button color="inherit" onClick={() => navigate("/adminsettings")}>Settings</Button>
+          <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
           </Toolbar>
         </AppBar>
 
