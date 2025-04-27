@@ -31,12 +31,12 @@ const CoverPage = () => {
     const userToken = localStorage.getItem("user_token");
 
     if (uuid) {
-        axios.get(`https://onlinetestcreationbackend.onrender.com/api/decode-test-uuid/${uuid}/`)
+        axios.get(`https://onlineplatform.onrender.com/api/decode-test-uuid/${uuid}/`)
         .then(res => {
           const decodedId = res.data.test_id;
           setTestId(decodedId);
 
-          return fetch(`https://onlinetestcreationbackend.onrender.com/api/tests/${decodedId}/`, {
+          return fetch(`/api/tests/${decodedId}/`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
