@@ -123,7 +123,7 @@ export default function AnnouncementsPage() {
     }
 
     try {
-        await axios.delete(`${API_BASE_URL}announcements/${id}/`, {
+        await axios.delete(`${API_BASE_URL}/announcements/${id}/`, {
             headers: { Authorization: `Token ${token}` },
         });
         console.log("Announcement deleted successfully!");

@@ -41,7 +41,7 @@ const AdminSettingsPage = () => {
   const [settingsId, setSettingsId] = useState(null); // State to hold the settings ID
 
   const navigate = useNavigate();
-  const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
+  const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api/admin-settings/';
 
   useEffect(() => {
     document.body.style.backgroundColor = darkMode ? "#121212" : "#f8f9fa";

@@ -2,7 +2,7 @@ import { useEffect,useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, TextField, Button, Box, Typography } from "@mui/material";
 import axios from "axios"; 
-const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
+
 const PreTestForm = () => {
   const { uuid } = useParams();// Changed testId → secureId
   const [testId, setTestId] = useState(null);
@@ -12,7 +12,7 @@ const PreTestForm = () => {
 
   useEffect(() => {
     if (uuid) {
-      axios.get(`${API_BASE_URL}/decode-test-uuid/${uuid}/`)
+      axios.get(`https://onlinetestcreationbackend.onrender.com/api/decode-test-uuid/${uuid}/`)
         .then(res => {
           setTestId(res.data.test_id);
         })
@@ -32,7 +32,7 @@ const PreTestForm = () => {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/test-users/`, {
+      const response = await fetch("https://onlinetestcreationbackend.onrender.com/api/test-users/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
