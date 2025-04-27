@@ -239,12 +239,17 @@ from .models import Test, Question
 
 class TestSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True)  # ✅ Handle nested questions
-    owner_name = serializers.CharField(source="owner.get_full_name", read_only=True)
+    owner_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Test
         fields = "__all__"
         read_only_fields = ['total_marks', 'total_time_limit', 'total_questions']  # ✅ Auto-calculated
+
+    def get_owner_name(self, obj):
+        if obj.owner:
+            return obj.owner.get_full_name()
+        return None
 
     def create(self, validated_data):
         questions_data = validated_data.pop('questions', [])
@@ -253,7 +258,6 @@ class TestSerializer(serializers.ModelSerializer):
         for question_data in questions_data:
             Question.objects.create(test=test, **question_data)
 
-        # ✅ Auto-update test fields
         test.total_questions = test.questions.count()
         test.total_marks = test.total_questions * float(test.marks_per_question)
         test.total_time_limit = test.total_questions * float(test.time_limit_per_question)
@@ -264,22 +268,21 @@ class TestSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         questions_data = validated_data.pop('questions', None)
 
-        # ✅ Update only if `questions` is provided
         if questions_data is not None:
-            instance.questions.all().delete()  # Remove old questions
+            instance.questions.all().delete()
             for question_data in questions_data:
                 Question.objects.create(test=instance, **question_data)
 
         instance.marks_per_question = validated_data.get('marks_per_question', instance.marks_per_question)
         instance.time_limit_per_question = validated_data.get('time_limit_per_question', instance.time_limit_per_question)
 
-        # ✅ Auto-calculate updated values
         instance.total_questions = instance.questions.count()
         instance.total_marks = instance.total_questions * float(instance.marks_per_question)
         instance.total_time_limit = instance.total_questions * float(instance.time_limit_per_question)
 
         instance.save()
         return instance
+
 
 class UserAnswerSerializer(serializers.ModelSerializer):
     question_text = serializers.CharField(source="question.text", read_only=True)
