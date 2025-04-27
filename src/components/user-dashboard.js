@@ -18,6 +18,7 @@ const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const UserDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userData, setUserData] = useState({});
+  const [open, setOpenModal] = useState(false);
   const [error, setError] = useState(null);
   const [recentActivities, setRecentActivities] = useState([]);
   const [completedTests, setCompletedTests] = useState([]);
@@ -49,6 +50,7 @@ const onClose = () => {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+  
   useEffect(() => {
     const fetchAchievements = async () => {
       const token = localStorage.getItem("user_token");
@@ -71,37 +73,67 @@ const onClose = () => {
     fetchAchievements();
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem("user_token");
-      const headers = { Authorization: `Token ${token}`, "Content-Type": "application/json" };
-  
-      try {
-        const [userRes, activitiesRes, testsRes, notificationsRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/userss/`, { headers }),
-          axios.get(`${API_BASE_URL}/recent-activities/`, { headers }),
-          axios.get(`${API_BASE_URL}/completed-tests/`, { headers }),
-          axios.get(`${API_BASE_URL}/notifications/`, { headers })
-        ]);
-  
-        setUserData(userRes.data);
-        setRecentActivities(activitiesRes.data);
-        setCompletedTests(testsRes.data);
-        setNotifications(notificationsRes.data);
-  
-        // Calculate achievements
-        const userAchievements = calculateAchievements(testsRes.data);
-        setAchievements(userAchievements);
-  
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
+  const fetchUserData = async () => {
+    const token = localStorage.getItem('user_token');
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${token}`,
     };
+
+    try {
+      const response = await axios.get(`${API_BASE_URL}/userss/${userData.id}/`, { headers });
+      setUserData(response.data);
+    } catch (error) {
+      console.error("Error fetching user profile data:", error);
+    }
+  };
+  const fetchData = async () => {
+    const token = localStorage.getItem("user_token");
+    const headers = { Authorization: `Token ${token}`, "Content-Type": "application/json" };
   
-    fetchData();
+    try {
+      const [userRes, activitiesRes, testsRes, notificationsRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/userss/`, { headers }),
+        axios.get(`${API_BASE_URL}/recent-activities/`, { headers }),
+        axios.get(`${API_BASE_URL}/completed-tests/`, { headers }),
+        axios.get(`${API_BASE_URL}/notifications/`, { headers })
+      ]);
+  
+      setUserData(userRes.data);
+      setRecentActivities(activitiesRes.data);
+      setCompletedTests(testsRes.data);
+      setNotifications(notificationsRes.data);
+  
+      const userAchievements = calculateAchievements(testsRes.data);
+      setAchievements(userAchievements);
+  
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Now fetchData is globally visible inside your component
+  
+  
+  useEffect(() => {
+      fetchData();
+    }, []);
+  useEffect(() => {
+    const userRole = localStorage.getItem("role"); // Retrieve role from localStorage
+
+    if (userRole !== "user") {
+      setOpenModal(true); // Show modal if not admin
+    } else {
+      fetchData(); // Fetch data if the user is an admin
+    }
   }, []);
+
+  const handleClose = () => {
+    setOpenModal(false);
+    navigate("/"); // Redirect to home or another page
+  };
   useEffect(() => {
       if (!userData?.id) return; // ✅ Ensure user ID is available
   
@@ -244,6 +276,33 @@ const onClose = () => {
   };
   
   return (
+    <>
+    <div>
+      {/* Other components or elements */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <AppBar position="fixed" sx={{ backgroundColor: "#003366", padding: "6px 16px" }}>
+          <Toolbar>
+            <IconButton edge="start" color="inherit" onClick={toggleSidebar}>
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>Skill Bridge Dashboard</Typography>
+            <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
+            <Button color="inherit" onClick={() => navigate("/userprofile")}>User  Profile</Button>
+            <Button color="inherit" onClick={() => navigate("/attempted-tests")}>Test List</Button>
+            <Button color="inherit" onClick={() => navigate("/usersetting")}>Settings</Button>
+            <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
+            <IconButton color="inherit" onClick={handleOpenNotifications}>
+              <Badge badgeContent={notifications.filter(n => !n.is_read).length} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+          </Toolbar>
+        </AppBar>
+        {/* Other components like Drawer, main content, etc. */}
+      </Box>
+    </div>
+ 
+  
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <AppBar position="fixed" sx={{ backgroundColor: "#003366", padding: "6px 16px" }}>
         <Toolbar>
@@ -653,8 +712,7 @@ const onClose = () => {
           </Box>
         </Box>
       </Box>
-    
-    
+ </>
   );
 };
 export default UserDashboard;

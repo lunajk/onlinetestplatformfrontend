@@ -83,7 +83,7 @@ const ManageTestsPage = () => {
       const userToken = localStorage.getItem("user_token"); // Assuming userToken is stored in localStorage
   
       const response = await axios.post(
-        `${API_BASE_URL}/tests/${selectedTest.id}/duplicate/`,
+        `${API_BASE_URL}/api/tests/${selectedTest.id}/duplicate/`,
         {},
         {
           headers: {

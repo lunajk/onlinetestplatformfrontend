@@ -38,28 +38,7 @@ import AdminNotifications from "./components/adminnotifications";
 
 const App = () => {
   
-    const [tests, setTests] = useState([]);
 
-    // Fetch test data from Django backend
-    useEffect(() => {
-      const userToken = localStorage.getItem("user_token"); // Retrieve the user token from local storage
-  
-      fetch("https://onlinetestcreationbackend.onrender.com/api/tests/", {
-          method: "GET",
-          headers: {
-              "Authorization": `Token ${userToken}`, // Include the token in the Authorization header
-              "Content-Type": "application/json" // Set the content type
-          }
-      })
-      .then(response => {
-          if (!response.ok) {
-              throw new Error("Network response was not ok");
-          }
-          return response.json();
-      })
-      .then(data => setTests(data))
-      .catch(error => console.error("Error fetching tests:", error));
-  }, []);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline /> {/* Normalize CSS across browsers */}

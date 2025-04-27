@@ -163,7 +163,7 @@ const EditTestPage = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/tests/${testId}/`, {
+      const response = await axios.get(`${API_BASE_URL}tests/${testId}/`, {
         headers: { Authorization: `Token ${token()}` },
       });
       
