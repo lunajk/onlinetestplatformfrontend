@@ -377,7 +377,7 @@ def duplicate_test(request, test_id):
             question.save()
 
         # Now use the newly created test's UUID
-        test_link = f"https://yourfrontenddomain.com/skillbridge/online-test-assessment/{new_test.test_uuid}/{new_test.id}/"
+        test_link = f"https://onlinetestplatformfrontend.vercel.app/smartbridge/online-test-assessment/{new_test.test_uuid}/{new_test.id}/"
 
         return Response({
             "message": "Test duplicated successfully!",
@@ -430,6 +430,7 @@ class RegisterView(APIView):
             user = serializer.save()
             return Response({'message': 'User registered successfully', 'role': request.data.get('role', 'user')}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = CustomUser .objects.all()
     serializer_class = UserSerializer

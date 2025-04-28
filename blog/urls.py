@@ -40,7 +40,7 @@ test_attempt_viewset = TestAttemptViewSet.as_view({
     'get': 'get_user_rank', # Maps GET requests to get_user_statistics
 })
 urlpatterns = [
-    path('questions/tests/<int:test_id>/', views.get_test_questions, name='get-test-questions'),
+    path('questions/tests/<int:test_id>/', views.get_questions_from_test, name='get_questions_from_test'),
     path('decode-test-uuid/<str:uuid_str>/', views.decode_uuid_and_get_test_id),
     path("notifications/mark-as-read/", mark_notifications_as_read, name="mark-notifications-as-read"),
     path('forgot-password/request-otp/', request_otp, name="request_otp"),
