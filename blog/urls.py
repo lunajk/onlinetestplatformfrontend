@@ -41,7 +41,6 @@ test_attempt_viewset = TestAttemptViewSet.as_view({
 })
 urlpatterns = [
     path('decode-test-uuid/<str:uuid_str>/', views.decode_uuid_and_get_test_id),
-    path('announcements/<int:pk>/', AnnouncementDetailView.as_view(), name='announcement-detail'),
     path("notifications/mark-as-read/", mark_notifications_as_read, name="mark-notifications-as-read"),
     path('forgot-password/request-otp/', request_otp, name="request_otp"),
     path('forgot-password/verify-otp/', verify_otp, name="verify_otp"),

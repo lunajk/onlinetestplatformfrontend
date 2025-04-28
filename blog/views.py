@@ -953,20 +953,25 @@ class QuestionCreateAPIView(APIView):
 class AnnouncementViewSet(viewsets.ModelViewSet):
     queryset = Announcement.objects.all().order_by('-created_at')
     serializer_class = AnnouncementSerializer
-    permission_classes = [IsAuthenticated]  # Applies to all methods
+    permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        # Log the request user for debugging
-        print("Creating announcement by:", self.request.user)
+    def create(self, request, *args, **kwargs):
+        # Now the serializer is validated properly
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        # Prevent duplicate announcements by title + message
-        if not Announcement.objects.filter(
-            title=serializer.validated_data['title'],
-            message=serializer.validated_data['message']
-        ).exists():
-            serializer.save(created_by=self.request.user)
-        else:
-            print("Duplicate announcement skipped")
+        title = serializer.validated_data['title']
+        message = serializer.validated_data['message']
+
+        # Check for duplicates
+        if Announcement.objects.filter(title=title, message=message).exists():
+            return Response({"detail": "Duplicate announcement exists."}, status=400)
+
+        # Save normally
+        serializer.save(created_by=request.user)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
+
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.select_related('announcement')  # Prefetch related data

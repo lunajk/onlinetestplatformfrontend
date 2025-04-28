@@ -24,22 +24,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
 ALLOWED_HOSTS = ['onlinetestcreationbackend.onrender.com','localhost','127.0.0.1',]
 
-
-
 SECRET_KEY = 'django-insecure--3uvw$200a+&a&_&=!#411+yqncsh-(-n!*r+ahey3em!6f==e'  
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
