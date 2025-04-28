@@ -25,7 +25,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['onlinetestcreationbackend.onrender.com','localhost','127.0.0.1',]
 
