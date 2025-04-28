@@ -913,6 +913,7 @@ class PasswordResetView(generics.CreateAPIView):
     queryset = PasswordReset.objects.all()
     serializer_class = PasswordResetSerializer
     permission_classes = [AllowAny]
+    
 class PerformanceHistoryView(APIView):
     def get(self, request):
         performance_history = PerformanceHistory.objects.all()
