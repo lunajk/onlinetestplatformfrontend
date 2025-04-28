@@ -75,7 +75,7 @@ class Test(models.Model):
     is_proctored = models.BooleanField(default=False)
     allow_retakes = models.BooleanField(default=False)
     allow_feedback = models.BooleanField(default=False)
-
+    is_Duplicated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     total_questions = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
