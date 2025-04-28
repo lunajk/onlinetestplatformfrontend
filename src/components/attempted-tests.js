@@ -373,7 +373,7 @@ const sendDataToAttemptedTestsAPI = async (testId, testTitle, testSubject, perce
               <th style={styles.th}>Score</th>
               <th style={styles.th}>Status</th>
               <th style={styles.th}>Rank</th>
-              <th style={styles.th}>Actions</th>
+              
             </tr>
           </thead>
           <tbody>
