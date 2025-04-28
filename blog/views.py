@@ -355,8 +355,6 @@ def get_tests(request):
     tests = Test.objects.all()
     serializer = TestSerializer(tests, many=True)
     return Response(serializer.data)
-import uuid  # Import UUID for unique code generation
-
 @api_view(["POST"])
 def duplicate_test(request, test_id):
     try:
@@ -368,7 +366,7 @@ def duplicate_test(request, test_id):
             end_date=test.end_date,
             due_time=test.due_time,
             owner=request.user,
-            isDuplicated=True
+            is_Duplicated=True
         )
         
         # Copy questions
@@ -378,10 +376,8 @@ def duplicate_test(request, test_id):
             question.test = new_test
             question.save()
 
-        # Generate a unique test code
-        unique_code = str(uuid.uuid4())[:10]  # Generates a short, unique 10-character string
-
-        test_link = f"http://localhost:3000/skillbridge/online-test-assessment/{unique_code}/{new_test.id}/"
+        # Now use the newly created test's UUID
+        test_link = f"https://yourfrontenddomain.com/skillbridge/online-test-assessment/{new_test.test_uuid}/{new_test.id}/"
 
         return Response({
             "message": "Test duplicated successfully!",
@@ -391,6 +387,17 @@ def duplicate_test(request, test_id):
     
     except Test.DoesNotExist:
         return Response({"error": "Test not found"}, status=404)
+
+@api_view(["GET"])
+def get_test_questions(request, test_id):
+    try:
+        test = Test.objects.get(id=test_id)
+        questions = Question.objects.filter(test=test)
+        serializer = QuestionSerializer(questions, many=True)
+        return Response(serializer.data)
+    except Test.DoesNotExist:
+        return Response({"error": "Test not found."}, status=404)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
