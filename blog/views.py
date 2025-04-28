@@ -950,13 +950,14 @@ class QuestionCreateAPIView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+from django.utils import timezone  # Add this import
+
 class AnnouncementViewSet(viewsets.ModelViewSet):
     queryset = Announcement.objects.all().order_by('-created_at')
     serializer_class = AnnouncementSerializer
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        # Now the serializer is validated properly
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -967,11 +968,14 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         if Announcement.objects.filter(title=title, message=message).exists():
             return Response({"detail": "Duplicate announcement exists."}, status=400)
 
+        # Set today's date if not provided
+        if 'date' not in serializer.validated_data:
+            serializer.validated_data['date'] = timezone.now().date()
+
         # Save normally
         serializer.save(created_by=request.user)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=201, headers=headers)
-
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.select_related('announcement')  # Prefetch related data

@@ -445,7 +445,7 @@ class Announcement(models.Model):
         max_length=50, 
         choices=[("all", "All Users"), ("students", "Students Only")]
     )
-    date = models.DateField()
+    date = models.DateField(null=True, blank=True)
     pinned = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
