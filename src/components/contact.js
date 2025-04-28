@@ -23,7 +23,7 @@ const ContactPage = () => {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/api/admin-notifications/`, {
+      const response = await axios.get(`${API_BASE_URL}/admin-notifications/`, {
         headers: {
           Authorization: `Token ${userToken}`, // Add user token in headers
         },
@@ -49,7 +49,7 @@ const ContactPage = () => {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/api/contact-submissions/`, {
+      await axios.post(`${API_BASE_URL}/contact-submissions/`, {
         name,
         email,
         message,
