@@ -591,7 +591,7 @@ const AdminSettingsPage = () => {
             right: 0,
             backgroundColor: "#003366",
             color: "white",
-            padding: "16px",
+            padding: "4px",
             textAlign: "center",
           }}
         >
@@ -603,9 +603,11 @@ const AdminSettingsPage = () => {
             <IconButton color="inherit" onClick={() => window.open("https://facebook.com", "_blank")}><FacebookIcon /></IconButton>
             <IconButton color="inherit" onClick={() => window.open("https://instagram.com", "_blank")}><InstagramIcon /></IconButton>
           </Box>
+          </Box>
+    
       
       </Box>
-    </Box>
+    
   );
 };
 

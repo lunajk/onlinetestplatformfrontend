@@ -5,6 +5,9 @@ import {
   AppBar, Toolbar, Snackbar, Alert
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import TwitterIcon from '@mui/icons-material/Twitter';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import InstagramIcon from '@mui/icons-material/Instagram';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import MenuIcon from '@mui/icons-material/Menu';
 import axios from 'axios';
@@ -441,16 +444,28 @@ const QuestionCreator = () => {
           </Alert>
         </Snackbar>
       </Container>
-
-      <Box sx={{
-        position: "fixed", bottom: 0, left: 0, right: 0,
-        backgroundColor: "#003366", color: "white",
-        padding: "16px", textAlign: "center"
-      }}>
-        <Typography variant="body2" sx={{ color: "white", marginBottom: "2px" }}>
-          © {new Date().getFullYear()} SkillBridge Online Test Platform. All rights reserved.
-        </Typography>
-      </Box>
+ <Box
+          sx={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "#003366",
+            color: "white",
+            padding: "4px",
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="body2" sx={{ color: "white", marginBottom: "2px" }}>
+            © {new Date().getFullYear()} SmartBridge Online Test Platform. All rights reserved.
+          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "center", gap: "2px", marginTop: "2px" }}>
+            <IconButton color="inherit" onClick={() => window.open("https://twitter.com", "_blank")}><TwitterIcon /></IconButton>
+            <IconButton color="inherit" onClick={() => window.open("https://facebook.com", "_blank")}><FacebookIcon /></IconButton>
+            <IconButton color="inherit" onClick={() => window.open("https://instagram.com", "_blank")}><InstagramIcon /></IconButton>
+          </Box>
+          </Box>
+    
     </Box>
   );
 };

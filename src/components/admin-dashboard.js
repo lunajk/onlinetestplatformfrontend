@@ -24,24 +24,6 @@ import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const COLORS = ["#003366", "#0088FE", "#FFBB28", "#FF8042", "#00C49F"];
 const AdminDashboard = () => {
-  const [userData, setUserData] = useState({});
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
-  const [feedback, setFeedback] = useState([]);
-  const [tests, setTests] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
-  const [testData, setTestData] = useState({ name: "", schedule: "", type: "" });
-  const [dashboardData, setDashboardData] = useState({});
-  const [setUserManagementData] = useState({});
-  const [userManagement, setUserManagement] = useState({});
-  const [analyticsData, setAnalyticsData] = useState({});
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [openNotifications, setOpenNotifications] = useState(false); // New state for notifications modal
-  const navigate = useNavigate();
-
-  // Initialize chartData with default values
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [
@@ -55,6 +37,104 @@ const AdminDashboard = () => {
       },
     ],
   });
+  
+  const [userData, setUserData] = useState({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
+  const [feedback, setFeedback] = useState([]);
+  const [tests, setTests] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [testData, setTestData] = useState({ name: "", schedule: "", type: "" });
+  const [dashboardData, setDashboardData] = useState({});
+  const [userManagement, setUserManagement] = useState({});
+  const [analyticsData, setAnalyticsData] = useState({});
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [openNotifications, setOpenNotifications] = useState(false); // New state for notifications modal
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const userRole = localStorage.getItem("role");
+    if (userRole !== "admin") {
+      setOpenModal(true);
+    } else {
+      fetchData();
+    }
+  }, []);
+
+  const handleClose = () => {
+    setOpenModal(false);
+    navigate("/");
+  };
+
+  const fetchData = async () => {
+    const token = localStorage.getItem("user_token");
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${token}`,
+    };
+
+    try {
+      const [userRes, dashRes, manageRes, testRes, feedbackRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/userss/`, { headers }),
+        axios.get(`${API_BASE_URL}/dashboard-overview/`, { headers }),
+        axios.get(`${API_BASE_URL}/user-management-stats/`, { headers }),
+        axios.get(`${API_BASE_URL}/tests-data/`, { headers }),
+        axios.get(`${API_BASE_URL}/feedbacks/`, { headers }),
+      ]);
+
+      setUserData(userRes.data);
+      setDashboardData(dashRes.data);
+      setUserManagement(manageRes.data);
+      setFeedback(feedbackRes.data);
+    } catch (error) {
+      console.error("Error fetching data", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchTests = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/tests-management/`);
+        setTests(res.data);
+      } catch (err) {
+        console.error("Error fetching tests:", err);
+      }
+    };
+    fetchTests();
+  }, []);
+
+  useEffect(() => {
+    const fetchCompletionRates = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/test-completion-rates/`);
+        const completionRates = res.data;
+
+        if (completionRates && typeof completionRates === "object" && !Array.isArray(completionRates)) {
+          const labels = Object.keys(completionRates);
+          const data = Object.values(completionRates).map((rate) => parseFloat(rate));
+
+          setChartData({
+            labels: labels,
+            datasets: [
+              {
+                label: "Test Completion Rate",
+                data: data,
+                backgroundColor: "rgba(0, 51, 102, 0.7)",
+                borderColor: "#003366",
+                borderWidth: 1,
+                barThickness: 30,
+              },
+            ],
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching completion rates:", err);
+      }
+    };
+    fetchCompletionRates();
+  }, []);
   const aggregatedData = tests.reduce((acc, test) => {
     const existing = acc.find((item) => item.name === test.subject);
     if (existing) {
@@ -63,115 +143,7 @@ const AdminDashboard = () => {
       acc.push({ name: test.subject, value: 1 });
     }
     return acc;
-  }, []);
-  useEffect(() => {
-    const userRole = localStorage.getItem("role"); // Retrieve role from localStorage
-
-    if (userRole !== "admin") {
-      setOpenModal(true); // Show modal if not admin
-    } else {
-      fetchData(); // Fetch data if the user is an admin
-    }
-  }, []);
-
-  const handleClose = () => {
-    setOpenModal(false);
-    navigate("/"); // Redirect to home or another page
-  };
-  const fetchData = async () => {
-      const token = localStorage.getItem('user_token');
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Token ${token}`,
-      };
-
-      try {
-        const userResponse = await axios.get(`${API_BASE_URL}/userss/`, { headers });
-        setUserData(userResponse.data);
-        const dashboardResponse = await axios.get(`${API_BASE_URL}/dashboard-overview/`, { headers });
-        setDashboardData(dashboardResponse.data);
-        const userManagementResponse = await axios.get(`${API_BASE_URL}/user-management-stats/`, { headers });
-        setUserManagement(userManagementResponse.data);
-        const response = await axios.get(`${API_BASE_URL}/tests-data/`, { headers });
-        setAnalyticsData(response.data);
-
-        const [ feedbacksResponse] = await Promise.all([
-          
-          axios.get(`${API_BASE_URL}/feedbacks/`, { headers }),
-        ]);
-
-        setUserManagement(userManagementResponse.data);
-        setFeedback(feedbacksResponse.data);
-      } catch (error) {
-        console.error("Error fetching data", error);
-      } finally {
-      
-      }
-    };
-
-  useEffect(() => {
-    const fetchTests = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/tests-management/`);
-        setTests(response.data);
-      } catch (error) {
-        console.error("Error fetching tests:", error);
-      }
-    };
-
-    fetchTests();
-  }, []);
-
-  useEffect(() => {
-    const fetchCompletionRates = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/test-completion-rates/`);
-        const completionRates = response.data;
-  
-        console.log("Raw API Data:", completionRates);
-  
-        if (completionRates && typeof completionRates === 'object') {
-          const labels = Object.keys(completionRates);
-          const data = Object.values(completionRates).map(rate => parseFloat(rate));
-  
-          // Check if all values are 0 and provide a message
-          if (data.every(value => value === 0)) {
-            console.log("All data values are 0. Consider adding a visual indicator for this case.");
-          }
-  
-          const formattedData = {
-            labels: labels,
-            datasets: [
-              {
-                label: "Test Completion Rate",
-                data: data, // Parsed values (which are currently 0)
-                backgroundColor: "rgba(0, 51, 102, 0.7)",
-                borderColor: "#003366",
-                borderWidth: 1,
-                barThickness: 30,
-              },
-            ],
-          };
-  
-          console.log("Formatted Chart Data:", formattedData);
-  
-          setChartData(formattedData);
-        }
-      } catch (error) {
-        console.error("Error fetching completion rates:", error);
-      }
-    };
-  
-    fetchCompletionRates();
-  }, []);
-  
-  // Log chartData when it changes
-  useEffect(() => {
-    console.log("Chart Data updated:", chartData);
-  }, [chartData]);
-  
-  
-  const fetchNotifications = async () => {
+  }, []);  const fetchNotifications = async () => {
     try {
 
       const userToken = localStorage.getItem("user_token"); // Assuming token is stored in localStorage
@@ -192,55 +164,42 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchNotifications();
   }, []);
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const userToken = localStorage.getItem("user_token");
+        const res = await axios.get(`${API_BASE_URL}/admin-notifications/`, {
+          headers: { Authorization: `Token ${userToken}` },
+        });
+        setNotifications(res.data);
+        setUnreadCount(res.data.filter((notif) => !notif.read).length);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+    fetchNotifications();
+  }, []);
 
   const handleOpenNotifications = async () => {
     setOpenNotifications(true);
-    await fetchNotifications(); // Fetch latest notifications
-  
-    // Mark all notifications as read
+    await fetchNotifications();
     try {
       const userToken = localStorage.getItem("user_token");
-  
-      await axios.post(
-        `${API_BASE_URL}/admin-notifications/mark-read/`, 
-        {}, 
-        {
-          headers: {
-            Authorization: `Token ${userToken}`,
-          },
-        }
-      );
-  
-      // Update unread count to zero
+      await axios.post(`${API_BASE_URL}/admin-notifications/mark-read/`, {}, {
+        headers: { Authorization: `Token ${userToken}` },
+      });
       setUnreadCount(0);
-    } catch (error) {
-      console.error("Error marking notifications as read:", error);
+    } catch (err) {
+      console.error("Error marking notifications as read:", err);
     }
   };
-  
-  
+
   const handleCloseNotifications = () => {
     setOpenNotifications(false);
   };
-  
-  useEffect(() => {
-    if (!userData?.id) return; // ✅ Ensure user ID is available
 
-    const userToken = localStorage.getItem("user_token");
-
-    axios
-      .get(`${API_BASE_URL}/users/${userData.id}/`, {
-        headers: { Authorization: `Token ${userToken}` },
-      })
-      
-      .then((response) => {
-        setUserData(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching user profile data:", error);
-      });
-  }, [userData.id]); // ✅ Depend on `userData` to ensure it has been fetched firs
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   const userManagementData = [
     {
       label: "Total Users",
@@ -250,7 +209,7 @@ const AdminDashboard = () => {
     {
       label: "Active Users",
       value: userManagement.active_users || 0,
-      icon: <VerifiedUser  color="success" sx={{ fontSize: 22 }} />,
+      icon: <VerifiedUser color="success" sx={{ fontSize: 22 }} />,
     },
     {
       label: "Admin Users",
@@ -263,7 +222,6 @@ const AdminDashboard = () => {
       icon: <PeopleAlt color="secondary" sx={{ fontSize: 22 }} />,
     },
   ];
-
   const handleSave = () => {
     if (testData.name) {
       setTests(prevTests =>
@@ -857,7 +815,6 @@ const AdminDashboard = () => {
               dataset.backgroundColor[index] = 'rgba(0, 51, 102, 1)'; // darker color on hover
             });
           }
-          chart.update('none');
         }
       }
     }]}
@@ -877,19 +834,20 @@ const AdminDashboard = () => {
             right: 0,
             backgroundColor: "#003366",
             color: "white",
-            padding: "16px",
+            padding: "4px",
             textAlign: "center",
           }}
         >
           <Typography variant="body2" sx={{ color: "white", marginBottom: "2px" }}>
-            © {new Date().getFullYear()} Skill Bridge Online Test Platform. All rights reserved.
+            © {new Date().getFullYear()} SmartBridge Online Test Platform. All rights reserved.
           </Typography>
           <Box sx={{ display: "flex", justifyContent: "center", gap: "2px", marginTop: "2px" }}>
             <IconButton color="inherit" onClick={() => window.open("https://twitter.com", "_blank")}><TwitterIcon /></IconButton>
             <IconButton color="inherit" onClick={() => window.open("https://facebook.com", "_blank")}><FacebookIcon /></IconButton>
             <IconButton color="inherit" onClick={() => window.open("https://instagram.com", "_blank")}><InstagramIcon /></IconButton>
           </Box>
-        </Box>
+          </Box>
+    
       </Box>
     </>
   );

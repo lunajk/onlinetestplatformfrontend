@@ -1,13 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  Container,
-  Typography,
-  Box,
-  Button,
-  CircularProgress,
-} from "@mui/material";
+import { Container, Typography, Box, Button, CircularProgress } from "@mui/material";
 
 const styles = {
   container: {
@@ -29,15 +23,15 @@ const CoverPage = () => {
 
   useEffect(() => {
     const userToken = localStorage.getItem("user_token");
-
+  
     if (uuid) {
-        axios.get(`https://onlineplatform.onrender.com/api/decode-test-uuid/${uuid}/`)
+      axios.get(`https://onlineplatform.onrender.com/api/decode-test-uuid/${uuid}/`)
         .then(res => {
           const decodedId = res.data.test_id;
           setTestId(decodedId);
-
-          return fetch(`/api/tests/${decodedId}/`, {
-            method: "GET",
+  
+          // Fetch test data using axios
+          return axios.get(`https://onlineplatform.onrender.com/api/tests/${decodedId}/`, {
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Token ${userToken}`,
@@ -45,23 +39,20 @@ const CoverPage = () => {
           });
         })
         .then(response => {
-          if (!response.ok) {
-            throw new Error("Failed to fetch test details");
-          }
-          return response.json();
-        })
-        .then(data => {
-          setTestData(data);
+          // Check if the response is valid
+          console.log("Test data response:", response);
+          setTestData(response.data);
           setLoading(false);
         })
         .catch(error => {
-          console.error("Error fetching test:", error);
+          // Log full error response for debugging
+          console.error("Error fetching test:", error.response || error);
           setError("Failed to load test details.");
           setLoading(false);
         });
     }
   }, [uuid]);
-
+  
   // ✅ Updated navigation to instructions page
   const handleStartTest = () => {
     navigate(`/smartbridge/online-test-assessment/${uuid}/instructions/`);

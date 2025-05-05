@@ -29,6 +29,9 @@ import {
 } from "@mui/material";
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import TwitterIcon from '@mui/icons-material/Twitter';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import InstagramIcon from '@mui/icons-material/Instagram';
 import logo from "../assets/Image20250320122406.png";
 
 export default function AnnouncementsPage() {
@@ -306,6 +309,28 @@ export default function AnnouncementsPage() {
             )}
           </Box>
         </Container>
+         <Box
+                  sx={{
+                    position: "fixed",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    backgroundColor: "#003366",
+                    color: "white",
+                    padding: "4px",
+                    textAlign: "center",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ color: "white", marginBottom: "2px" }}>
+                    © {new Date().getFullYear()} SmartBridge Online Test Platform. All rights reserved.
+                  </Typography>
+                  <Box sx={{ display: "flex", justifyContent: "center", gap: "2px", marginTop: "2px" }}>
+                    <IconButton color="inherit" onClick={() => window.open("https://twitter.com", "_blank")}><TwitterIcon /></IconButton>
+                    <IconButton color="inherit" onClick={() => window.open("https://facebook.com", "_blank")}><FacebookIcon /></IconButton>
+                    <IconButton color="inherit" onClick={() => window.open("https://instagram.com", "_blank")}><InstagramIcon /></IconButton>
+                  </Box>
+                  </Box>
+            
 
         <Snackbar
           open={openSnackbar}
