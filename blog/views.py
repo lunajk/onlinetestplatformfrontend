@@ -1692,7 +1692,6 @@ class UserAnswerViewSet(viewsets.ModelViewSet):
     
 import re
 from PyPDF2 import PdfReader
-
 class UploadQuestionsView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
@@ -1708,74 +1707,111 @@ class UploadQuestionsView(APIView):
         except Test.DoesNotExist:
             return Response({'error': 'Test not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+        # CSV UPLOAD
         if file.name.endswith('.csv'):
-            decoded_file = file.read().decode('utf-8')
-            io_string = io.StringIO(decoded_file)
-            reader = csv.DictReader(io_string)
+            try:
+                decoded_file = file.read().decode('utf-8')
+                io_string = io.StringIO(decoded_file)
+                reader = csv.DictReader(io_string)
 
-            for row in reader:
-                try:
-                    Question.objects.create(
-                        test=test,
-                        text=row['text'],
-                        type=row['type'],
-                        options=json.loads(row.get('options', '[]')),
-                        correct_answer=json.loads(row.get('correct_answer', '[]')),
-                    )
-                except Exception as e:
-                    return Response({'error': f"Failed to process row: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+                for row in reader:
+                    try:
+                        Question.objects.create(
+                            test=test,
+                            text=row['text'],
+                            type=row['type'],
+                            options=json.loads(row.get('options', '[]')),
+                            correct_answer=json.loads(row.get('correct_answer', '[]')),
+                        )
+                    except Exception as e:
+                        print(f"Error saving question from CSV: {e}")
+                        return Response({'error': f"CSV Processing Failed: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
+            except Exception as e:
+                print(f"Error processing CSV: {e}")
+                return Response({'error': f"CSV Processing Failed: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # PDF UPLOAD
         elif file.name.endswith('.pdf'):
-            pdf_reader = PdfReader(file)
-            full_text = ''
-            for page in pdf_reader.pages:
-                full_text += page.extract_text() + '\n'
+            try:
+                pdf_reader = PdfReader(file)
+                full_text = ''
+                for page in pdf_reader.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        full_text += page_text + '\n'
+
+                print(f"Extracted Text: {full_text[:500]}...")  # Debugging PDF text extraction
+
                 question_blocks = full_text.strip().split('\n\n')
-            for block in question_blocks:
-                lines = block.strip().split('\n')
-                if not lines:
-                    continue
-                question_text = lines[0].strip()
-                options = []
-                correct_answer = []
-                answer_line = None
-            for i, line in enumerate(lines):
-                if line.lower().startswith('answer:'):
-                    answer_line = line
-                    lines.pop(i)
-                    break
-            for line in lines[1:]:
-                match = re.match(r'^(\d+)\.\s*(.+)', line.strip())
-                if match:
-                    options.append(match.group(2).strip())
-            if '____' in question_text or '__________' in question_text:
-                q_type = 'fillintheblank'
-                if answer_line:
-                    correct_answer = [answer_line.split(':', 1)[1].strip()]
-                elif len(options) == 2 and set(opt.lower() for opt in options) == {"true", "false"}:
-                    q_type = 'truefalse'
-                    if answer_line:
-                        correct_answer = [options[int(answer_line.split(':', 1)[1].strip()) - 1]]
-                elif answer_line and ',' in answer_line:
-                    q_type = 'multipleresponse'
-                    indices = [int(i.strip()) - 1 for i in answer_line.split(':', 1)[1].split(',')]
-                    correct_answer = [options[i] for i in indices if 0 <= i < len(options)]
-                elif options:
-                    q_type = 'multiplechoice'
-                    if answer_line:
-                        idx = int(answer_line.split(':', 1)[1].strip()) - 1
-                        if 0 <= idx < len(options):
-                            correct_answer = [options[idx]]
-                else:
-                    q_type = 'fillintheblank'
-                Question.objects.create(
-                    test=test,
-                    text=question_text,
-                    type=q_type,
-                    options=options,
-                     correct_answer=correct_answer
-                    )
-           
+                print(f"Extracted {len(question_blocks)} question blocks from PDF")
+
+                for block in question_blocks:
+                    try:
+                        lines = block.strip().split('\n')
+                        if not lines:
+                            continue
+
+                        question_text = lines[0].strip()
+                        options = []
+                        correct_answer = []
+                        answer_line = None
+
+                        # Find answer line and remove it
+                        for i, line in enumerate(lines):
+                            if line.lower().startswith('answer:'):
+                                answer_line = line
+                                lines.pop(i)
+                                break
+
+                        # Extract options
+                        for line in lines[1:]:
+                            match = re.match(r'^(\d+)\.\s*(.+)', line.strip())
+                            if match:
+                                options.append(match.group(2).strip())
+
+                        # Determine question type
+                        if '____' in question_text or '__________' in question_text:
+                            q_type = 'fillintheblank'
+                            if answer_line:
+                                correct_answer = [answer_line.split(':', 1)[1].strip()]
+                        elif len(options) == 2 and set(opt.lower() for opt in options) == {"true", "false"}:
+                            q_type = 'truefalse'
+                            if answer_line:
+                                idx = int(answer_line.split(':', 1)[1].strip()) - 1
+                                correct_answer = [options[idx]] if 0 <= idx < len(options) else []
+                        elif answer_line and ',' in answer_line:
+                            q_type = 'multipleresponse'
+                            indices = [int(i.strip()) - 1 for i in answer_line.split(':', 1)[1].split(',')]
+                            correct_answer = [options[i] for i in indices if 0 <= i < len(options)]
+                        elif options:
+                            q_type = 'multiplechoice'
+                            if answer_line:
+                                idx = int(answer_line.split(':', 1)[1].strip()) - 1
+                                correct_answer = [options[idx]] if 0 <= idx < len(options) else []
+                        else:
+                            q_type = 'fillintheblank'
+
+                        # Save question
+                        try:
+                            Question.objects.create(
+                                test=test,
+                                text=question_text,
+                                type=q_type,
+                                options=options,
+                                correct_answer=correct_answer
+                            )
+                            print(f"Successfully created question: {question_text[:50]}")  # Debug success message
+                        except Exception as e:
+                            print(f"Error creating question from PDF: {e}")
+
+                    except Exception as inner_e:
+                        print(f"Error processing block: {block[:50]} - {inner_e}")
+
+            except Exception as outer_e:
+                print(f"Error processing PDF: {outer_e}")
+                return Response({'error': f"PDF Processing Failed: {str(outer_e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
         else:
             return Response({'error': 'Unsupported file type. Only .csv and .pdf allowed.'}, status=status.HTTP_400_BAD_REQUEST)
 

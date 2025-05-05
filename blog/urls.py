@@ -17,7 +17,7 @@ from .views import (UploadQuestionsView,
     TestimonialRetrieveUpdateDestroyView, FAQListCreateView, FAQRetrieveUpdateDestroyView,
     AchievementView,user_management_stats,request_otp,verify_otp,mark_notifications_as_read,duplicate_test,
     PasswordResetView, ContactMessageView,AdminNotificationViewSet, dashboard_view,test_management_view,
-    NotificationViewSet, TestSummaryList,test_report,test_overview_view,test_completion_rate_view,
+    NotificationViewSet, TestSummaryList,CaptureImageView,test_report,test_overview_view,test_completion_rate_view,
     UserSettingsView, CompletedTestCreateView, dashboards_overview, analytics_report,CompletedTestViewSet,
     user_management_overview,UserProfileViewSet, enroll_student,save_consent, FeedbackViewSet, AchievementsView,
     AchievementRetrieveUpdateDestroyView,PerformanceStatListCreateView, ReviewAPIView, ExportAPIView
@@ -40,6 +40,7 @@ test_attempt_viewset = TestAttemptViewSet.as_view({
     'get': 'get_user_rank', # Maps GET requests to get_user_statistics
 })
 urlpatterns = [
+    path('capture/', CaptureImageView.as_view(), name='capture-image'),
     path('questions/tests/<int:test_id>/', views.get_questions_from_test, name='get_questions_from_test'),
     path('decode-test-uuid/<str:uuid_str>/', views.decode_uuid_and_get_test_id),
     path("notifications/mark-as-read/", mark_notifications_as_read, name="mark-notifications-as-read"),
