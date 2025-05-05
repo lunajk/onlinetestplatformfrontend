@@ -226,16 +226,23 @@ class UserResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserResponse
         fields = ['test_name', 'question', 'correct', 'incorrect', 'attempts']
+   
 class QuestionSerializer(serializers.ModelSerializer):
-    test = serializers.PrimaryKeyRelatedField(read_only=True)  # ✅ Prevents "test" field error
-    options = serializers.JSONField(default=list)  # ✅ Prevents null options
-    correct_answer = serializers.JSONField(default=list) 
+    # Make `test` read-only without queryset (for output only)
+    test = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    options = serializers.JSONField(default=list)
+    correct_answer = serializers.JSONField(default=list)
+
     class Meta:
         model = Question
         fields = ["id", "text", "type", "options", "correct_answer", "test"]
 
-from rest_framework import serializers
-from .models import Test, Question
+    def create(self, validated_data):
+        # If test is provided, associate it; otherwise, leave test as None (for question bank)
+        test = validated_data.get('test', None)  # test is optional
+        question = Question.objects.create(test=test, **validated_data)
+        return question
 
 class TestSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True)  # ✅ Handle nested questions

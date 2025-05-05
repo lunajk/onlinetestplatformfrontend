@@ -409,6 +409,7 @@ def get_test_questions(request, test_id):
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
@@ -416,13 +417,13 @@ class LoginView(APIView):
         user = authenticate(username=username, password=password)
 
         if user:
-            # Generate a new user_token for each login
-            new_token = secrets.token_hex(16)
-            user.user_token = new_token
-            user.save(update_fields=['user_token'])  # Save new token
+            # Only generate token if not already present
+            if not user.user_token:
+                user.user_token = secrets.token_hex(16)
+                user.save(update_fields=['user_token'])
 
             return Response({
-                "user_token": new_token,
+                "user_token": user.user_token,
                 "role": user.role
             }, status=status.HTTP_200_OK)
 
@@ -827,6 +828,7 @@ class FeatureListCreateView(generics.ListCreateAPIView):
     queryset = Feature.objects.all()
     serializer_class = FeatureSerializer
     permission_classes = [AllowAny]
+    
 class ReviewAPIView(APIView):
     permission_classes = [IsAuthenticated]
 

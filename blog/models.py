@@ -97,7 +97,7 @@ class Question(models.Model):
         ('fillintheblank', 'Fill in the Blank'),
         ('multipleresponse', 'Multiple Response'),
     ]
-    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="questions")
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, null=True, blank=True)
     text = models.TextField()
     type = models.CharField(max_length=50, choices=QUESTION_TYPES)
     options = models.JSONField(default=list, blank=True, null=True)  # ✅ Default to empty list
