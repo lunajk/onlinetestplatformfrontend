@@ -1115,46 +1115,41 @@ def public_tests(request):
     serializer = TestSerializer(tests, many=True)
     return Response(serializer.data)
 
+from .models import TestUser  # Import the new model
+
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Since test takers don't login
+@permission_classes([AllowAny])
 def register_test_user(request):
     data = request.data
-
-    # Debug raw input
-    print("📥 Raw request data:", data)
 
     name = data.get('name')
     email = data.get('email')
     test_id = data.get('test_id')
 
-    # Check for missing values
-    if not test_id or not email:
-        print("❌ Missing test_id or email")
-        return Response({"error": "test_id and email required."}, status=400)
+    if not test_id or not email or not name:
+        return Response({"error": "name, email and test_id required."}, status=400)
 
-    # Normalize email
     normalized_email = email.strip().lower()
 
-    # Get test object
     try:
         test = Test.objects.get(id=test_id)
     except Test.DoesNotExist:
-        print(f"❌ Test with ID {test_id} not found.")
         return Response({"error": "Test not found."}, status=404)
 
-    # DEBUG: Show stored allowed emails
-    allowed_emails = AllowedParticipant.objects.filter(test=test).values_list('email', flat=True)
-    print("📃 Allowed Emails for Test:", list(allowed_emails))
-    print("🔍 Submitted Email:", normalized_email)
-
-    # Check if email is allowed
     if not AllowedParticipant.objects.filter(test=test, email=normalized_email).exists():
-        print("⛔ Access denied for email:", normalized_email)
         return Response({"error": "You are not allowed to take this test."}, status=403)
 
-    # ✅ Access allowed
-    print("✅ Access granted for:", normalized_email)
-    return Response({"message": "Access granted."}, status=200)
+    # ✅ Create or reuse a TestUser (prevent duplicates for the same test & email)
+    test_user, created = TestUser.objects.get_or_create(
+        email=normalized_email,
+        test=test,
+        defaults={"name": name, "token": secrets.token_hex(16)}
+    )
+
+    return Response({
+        "message": "Access granted.",
+        "token": test_user.token
+    }, status=200)
 
 @api_view(['GET'])
 def get_leaderboard(request):
