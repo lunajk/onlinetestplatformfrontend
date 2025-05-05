@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 
 User = get_user_model()
 class RegisterSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(write_only=True)  # Accept role from frontend
+    role = serializers.CharField(write_only=True)
 
     class Meta:
         model = CustomUser
@@ -26,12 +26,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        # Hash the password before saving
-        validated_data['password'] = make_password(validated_data['password'])
-
-        # Create the user instance with all validated data (including role)
-        user = CustomUser.objects.create(**validated_data)
-
+        # Use create_user to hash password and save user
+        user = CustomUser.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            role=validated_data['role']
+        )
         return user
 class TestSubmissionSerializer(serializers.ModelSerializer):
     class Meta:

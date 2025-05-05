@@ -405,7 +405,6 @@ def get_test_questions(request, test_id):
     except Test.DoesNotExist:
         return Response({"error": "Test not found."}, status=404)
 
-
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -414,7 +413,15 @@ class LoginView(APIView):
         username = request.data.get("username")
         password = request.data.get("password")
 
+        # Try both username and email authentication if needed
         user = authenticate(username=username, password=password)
+
+        if not user:
+            try:
+                user_obj = CustomUser.objects.get(email=username)
+                user = authenticate(username=user_obj.username, password=password)
+            except CustomUser.DoesNotExist:
+                user = None
 
         if user:
             # Only generate token if not already present
