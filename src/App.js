@@ -59,7 +59,7 @@ const App = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="/smartbridge/online-test-assessment/:uuid/exit" element={<ProctoringExitPage />} />
-          <Route path="/contactpage" element={<ContactPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/edit-test/:testId" element={<EditTestPage />} />
           <Route path="/admin-profile" element={<AdminProfile />} />
           <Route path="/user-dashboard" element={<DashboardPage />} />

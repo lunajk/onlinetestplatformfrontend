@@ -584,7 +584,7 @@ const HomePage = () => {
           </Typography>
           <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
           <Button color="inherit" onClick={() => navigate("/aboutus")}>About Us</Button>
-          <Button color="inherit" onClick={() => navigate("/contactpage")}>Contact Us</Button>
+          <Button color="inherit" onClick={() => navigate("/contact")}>Contact Us</Button>
           <Button color="inherit" onClick={() => navigate("/register")}>Sign Up</Button>
           <Button color="inherit" onClick={() => navigate("/login")}>Login</Button>
         </Toolbar>
@@ -655,7 +655,7 @@ const HomePage = () => {
 </ListItem>
 <ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
   <Button
-    onClick={() => navigate('/RegisterPage')}
+    onClick={() => navigate('/register')}
     sx={{
       color: "#003366", // Dark blue color
       fontWeight: "bold",
@@ -665,7 +665,7 @@ const HomePage = () => {
       justifyContent: "flex-start", // Align the button content to the left
     }}
   >
-    Sign-up
+    Sign up
   </Button>
 </ListItem>
 
