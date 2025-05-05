@@ -150,13 +150,13 @@ const QuestionCreator = () => {
 
   return (
     <Box sx={{ display: "flex" }}>
-      <AppBar position="fixed" sx={{ backgroundColor: "#003366", padding: "6px 16px" }}>
+      <AppBar position="fixed" sx={{ backgroundColor: "#003366" }}>
         <Toolbar>
           <IconButton color="inherit" onClick={toggleSidebar} edge="start" sx={{ marginRight: 2 }}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontSize: "1rem" }}>
-            SkillBridge Online Test Platform
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Skill Bridge Online Test Platform
           </Typography>
           <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
           <Button color="inherit" onClick={() => navigate("/admin-profile")}>Admin Profile</Button>

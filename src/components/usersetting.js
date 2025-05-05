@@ -136,7 +136,7 @@ const SettingsCustomizationPage = () => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            SkillBridge Online Test Platform
+          Skill Bridge Online Test Platform
           </Typography>
           <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
           <Button color="inherit" onClick={() => navigate("/userprofile")}>User Profile</Button>

@@ -304,12 +304,14 @@ const onClose = () => {
  
   
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <AppBar position="fixed" sx={{ backgroundColor: "#003366", padding: "6px 16px" }}>
+    <AppBar position="fixed" sx={{ backgroundColor: "#003366" }}>
         <Toolbar>
-        <IconButton edge="start" color="inherit" onClick={toggleSidebar}>
-      <MenuIcon />
-    </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>Skill Bridge Dashboard</Typography>
+          <IconButton color="inherit" onClick={toggleSidebar} edge="start" sx={{ marginRight: 2 }}>
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Skill Bridge Online Test Platform
+          </Typography>
           <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
           <Button color="inherit" onClick={() => navigate("/userprofile")}>User Profile</Button>
           <Button color="inherit" onClick={() => navigate("/attempted-tests")}>Test List</Button>

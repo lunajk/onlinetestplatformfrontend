@@ -358,14 +358,14 @@ const AdminSettingsPage = () => {
           paddingBottom: "80px", // Ensure space for footer
         }}
       >
-        <AppBar position="fixed" sx={{ backgroundColor: "#003366", padding: "6px 16px" }}>
-          <Toolbar>
-            <IconButton color="inherit" onClick={toggleSidebar} edge="start" sx={{ marginRight: 2 }}>
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" sx={{ flexGrow: 1, fontSize: "1rem" }}>
-              SmartBridge Online Test Platform
-            </Typography>
+      <AppBar position="fixed" sx={{ backgroundColor: "#003366" }}>
+        <Toolbar>
+          <IconButton color="inherit" onClick={toggleSidebar} edge="start" sx={{ marginRight: 2 }}>
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Skill Bridge Online Test Platform
+          </Typography>
           <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
           <Button color="inherit" onClick={() => navigate("/admin-profile")}>Admin Profile</Button>
           <Button color="inherit" onClick={() => navigate("/manage-tests")}>Test List</Button>
