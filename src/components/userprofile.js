@@ -294,22 +294,6 @@ const Profile = () => {
 
 <ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
   <Button
-    onClick={() => navigate('/performancehistory')}
-    sx={{
-      color: "#003366", // Dark blue color
-      fontWeight: "bold",
-      fontSize: "16px",
-      textAlign: "left", // Align the text to the left
-      width: "100%", // Take up full width of the ListItem
-      justifyContent: "flex-start", // Align the button content to the left
-    }}
-  >
-    Performance History
-  </Button>
-</ListItem>
-
-<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-  <Button
     onClick={() => navigate('/usersetting')}
     sx={{
       color: "#003366", // Dark blue color

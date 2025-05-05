@@ -482,29 +482,28 @@ const AdminDashboard = () => {
             <Grid container spacing={1} alignItems="center">
             
           <Grid item xs={4} sx={{ textAlign: "center" }}>
-            {userData?.profile_picture ? (
-              <Avatar
-                src={userData.profile_picture}
-                alt="Profile"
-                sx={{
-                  width: 90,
-                  height: 90,
-                  boxShadow: 2,
-                  border: "3px solid #003366",
-                }}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "https://via.placeholder.com/150"; // ✅ Fallback if image fails to load
-                }}
-              />
-            ) : (
-              <Avatar
-                src="https://via.placeholder.com/150"
-                sx={{ width: 90, height: 90 }}
-              />
-            )}
-          </Grid>
-          
+                      {userData?.profile_picture ? (
+                        <Avatar
+                          src={userData.profile_picture}
+                          alt="Profile"
+                          sx={{
+                            width: 90,
+                            height: 90,
+                            boxShadow: 2,
+                            border: "3px solid #003366",
+                          }}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://via.placeholder.com/150"; // ✅ Fallback if image fails to load
+                          }}
+                        />
+                      ) : (
+                        <Avatar
+                          src="https://via.placeholder.com/150"
+                          sx={{ width: 90, height: 90 }}
+                        />
+                      )}
+                    </Grid>
               <Grid item xs={8}>
                 <Box sx={{ paddingLeft: "8px" }}>
                   <Typography variant="body2" sx={{ color: "#003366", fontSize: "19px", marginBottom: "6px" }}>
