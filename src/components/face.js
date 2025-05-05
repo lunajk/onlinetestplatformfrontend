@@ -396,8 +396,8 @@ const WebcamProctoring = ({ studentId, testId }) => {
             <video
                 ref={videoRef}
                 autoPlay
-                width="300" // Increased size for the video
-                height="300" // Increased size for the video
+                width="250" // Increased size for the video
+                height="250" // Increased size for the video
                 style={{
                     border: "2px solid black",
                     borderRadius: "50%", // Make the video circular

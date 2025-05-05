@@ -48,7 +48,7 @@ const PreTestForm = () => {
           localStorage.setItem('userToken', data.token);
         }
   
-        navigate(`/smartbridge/online-test-assessment/${uuid}/cover/`);
+        navigate(`/smartbridge/online-test-assessment/${uuid}/instructions/`);
       } else {
         alert(data.message || "You are not allowed to take this test.");
       }

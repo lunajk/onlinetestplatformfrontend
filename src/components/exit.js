@@ -7,7 +7,7 @@ const ProctoringExitPage = () => {
   const { uuid } = useParams(); // Get test UUID from the URL
 
   const handleRetake = () => navigate(`/smartbridge/online-test-assessment/${uuid}/cover`);
-  const handleHome = () => navigate("/dashboard");
+  const handleHome = () => navigate("/home");
   return (
     <>
       <style>

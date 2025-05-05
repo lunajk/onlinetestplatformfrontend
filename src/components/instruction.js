@@ -296,7 +296,7 @@ const InstructionPage = () => {
     if (error) return <Typography color="error">{error}</Typography>;
 
     return (
-        <Paper elevation={4} sx={{ padding: 4, borderRadius: 2, margin: 'auto', maxWidth: '800px' }}>
+        <Paper elevation={4} sx={{ padding: 4, borderRadius: 2, height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold", color: "#003366", textAlign: "center" }}>
             Welcome to {testData?.title}
         </Typography>
@@ -306,7 +306,42 @@ const InstructionPage = () => {
             <Grid item xs={12} sm={4} md={3}><InfoBox icon={<AssignmentIcon />} text={testData?.total_questions} label="Total Questions" /></Grid>
             <Grid item xs={12} sm={4} md={3}><InfoBox icon={<CheckCircleIcon />} text="Multiple Formats" label="MCQ, True/False, Fill-in-the-Blank" /></Grid>
         </Grid>
-        
+         <Typography
+                 variant="h2"
+                 sx={{
+                   fontSize: '3rem', fontWeight: 'bold', color: '#003366', marginBottom: '16px',
+                   background: 'linear-gradient(135deg, #003366, #00509e)',
+                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                   animation: 'slideIn 1s ease-in-out'
+                 }}
+               >
+                 {testData?.title}
+               </Typography>
+         
+               <Typography variant="h4" sx={{ fontSize: '1.5rem', color: '#1976d2', marginBottom: '16px', fontWeight: '600' }}>
+                 Created By:
+               </Typography>
+               <Typography variant="h5" sx={{ fontSize: '1.25rem', color: '#004d40', marginBottom: '16px', fontWeight: '500' }}>
+                 {testData?.owner_name || "Unknown"}
+               </Typography>
+         
+               <Typography variant="body1" sx={{ fontSize: '1.1rem', color: '#555', marginBottom: '24px' }}>
+                 Date: {new Date(testData?.created_at).toLocaleDateString()}
+               </Typography>
+         
+               <Box sx={{ maxWidth: '800px', textAlign: 'left', marginBottom: '40px' }}>
+                 <Typography variant="h5" sx={{ fontSize: '1.5rem', color: '#003366', marginBottom: '16px', fontWeight: 'bold' }}>
+                   About This Assessment
+                 </Typography>
+                 <Typography variant="body1" sx={{ fontSize: '1rem', color: '#333', marginBottom: '16px', lineHeight: '1.6' }}>
+                   {testData?.description}
+                 </Typography>
+               </Box>
+         
+               <Typography variant="body1" sx={{ fontSize: '1.2rem', color: '#004d40', marginBottom: '40px', fontWeight: '500' }}>
+                 Good luck on your test!
+               </Typography>
+         
         {/* Instructions */}
         <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ fontWeight: "bold", color: "#003366", mb: 2 }}>
@@ -327,18 +362,7 @@ const InstructionPage = () => {
             </Grid>
         </Box>
         
-        {/* Consent Toggle */}
-        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#003366", mt: 3 }}>Enable Monitoring</Typography>
-        <Grid container spacing={2} justifyContent="center">
-            {[{ key: "microphone", icon: <FaMicrophone />, label: "Microphone" },
-            { key: "location", icon: <FaMapMarkerAlt />, label: "Location" },
-            { key: "network", icon: <FaWifi />, label: "Network" },
-            { key: "phone", icon: <FaMobileAlt />, label: "Phone" }].map(({ key, icon, label }) => (
-                <Grid item xs={6} sm={3} key={key}>
-                    <ConsentToggle icon={icon} label={label} enabled={consent[key]} onClick={() => handleConsentToggle(key)} />
-                </Grid>
-            ))}
-        </Grid>
+
         
         {/* Face Verification Section */}
         <Box sx={{ mt: 4, mb: 4 }}>
