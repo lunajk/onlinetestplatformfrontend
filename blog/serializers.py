@@ -288,7 +288,6 @@ class UserAnswerSerializer(serializers.ModelSerializer):
         model = UserAnswer
         fields = ['id', 'question_text', 'selected_option']
 
-
 class StudentCaptureSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentCapture

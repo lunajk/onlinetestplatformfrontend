@@ -130,7 +130,7 @@ class StudentCapture(models.Model):
     
     def __str__(self):
         return f"Capture by {self.student.username if self.student else 'Anonymous'} at {self.timestamp}"
-    
+       
 class UserPerformance(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     total_tests = models.IntegerField(default=0)

@@ -97,7 +97,7 @@ def get_secure_uuid(request, testid):
 def request_otp(request):
     """API to generate and send OTP"""
     email = request.data.get('email')
-    
+   
     # Validate email input
     if not email:
         return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -112,7 +112,7 @@ def request_otp(request):
 
     # Send OTP email
     send_otp_email(email, otp)
-    
+   
     return Response({"message": "OTP sent successfully"}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
@@ -355,38 +355,45 @@ def get_tests(request):
     tests = Test.objects.all()
     serializer = TestSerializer(tests, many=True)
     return Response(serializer.data)
+   
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Test, Question
+
 @api_view(["POST"])
 def duplicate_test(request, test_id):
     try:
         test = Test.objects.get(id=test_id)
         new_test = Test.objects.create(
             title=f"{test.title} (Copy)",
-            total_time_limit=test.total_time_limit if test.total_time_limit is not None else 0,  
+            total_time_limit=test.total_time_limit or 0,
             start_date=test.start_date,
             end_date=test.end_date,
             due_time=test.due_time,
             owner=request.user,
             is_Duplicated=True
         )
-        
-        # Copy questions
+
+        # Copy all questions
         questions = Question.objects.filter(test=test)
         for question in questions:
-            question.pk = None  
+            question.pk = None  # Clone
             question.test = new_test
             question.save()
 
-        # Now use the newly created test's UUID
-        test_link = f"https://onlinetestplatformfrontend.vercel.app/smartbridge/online-test-assessment/{new_test.test_uuid}/{new_test.id}/"
+        # ✅ Generate frontend test link with UUID only
+        test_link = f"https://online-test-creation.vercel.app/smartbridge/online-test-assessment/{new_test.test_uuid}"
 
         return Response({
             "message": "Test duplicated successfully!",
             "new_test_id": new_test.id,
+            "test_uuid": str(new_test.test_uuid),
             "test_link": test_link
         })
-    
+
     except Test.DoesNotExist:
         return Response({"error": "Test not found"}, status=404)
+
 
 @api_view(["GET"])
 def get_test_questions(request, test_id):
@@ -430,7 +437,7 @@ class RegisterView(APIView):
             user = serializer.save()
             return Response({'message': 'User registered successfully', 'role': request.data.get('role', 'user')}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+   
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = CustomUser .objects.all()
     serializer_class = UserSerializer
@@ -501,7 +508,7 @@ class CompletedTestViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+   
 class CategoryListCreateView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -594,7 +601,7 @@ def dashboards_overview(request):
     average_score = Assessment.objects.aggregate(avg_score=Avg("score"))["avg_score"]
 
     completion_rate = (
-        0 if assessments_taken == 0 
+        0 if assessments_taken == 0
         else (Assessment.objects.filter(completed=True).count() / assessments_taken * 100)
     )
 
@@ -913,7 +920,7 @@ class PasswordResetView(generics.CreateAPIView):
     queryset = PasswordReset.objects.all()
     serializer_class = PasswordResetSerializer
     permission_classes = [AllowAny]
-    
+   
 class PerformanceHistoryView(APIView):
     def get(self, request):
         performance_history = PerformanceHistory.objects.all()
@@ -956,9 +963,9 @@ class QuestionCreateAPIView(APIView):
             question_objects = [Question(**q) for q in questions_data]
             Question.objects.bulk_create(question_objects)
             return Response({"message": "Questions created successfully"}, status=status.HTTP_201_CREATED)
-        
+       
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+   
 from django.utils import timezone  # Add this import
 
 class AnnouncementViewSet(viewsets.ModelViewSet):
@@ -1060,8 +1067,11 @@ def import_questions(request):
     source_test_id = request.data.get('source_test_id')
     target_test_id = request.data.get('target_test_id')
 
+    if not source_test_id or not target_test_id:
+        return Response({"error": "source_test_id and target_test_id are required."}, status=400)
+
     try:
-        source_test = Test.objects.get(id=source_test_id, is_public=True)
+        source_test = Test.objects.get(id=source_test_id)  # Removed is_public=True
         target_test = Test.objects.get(id=target_test_id)
     except Test.DoesNotExist:
         return Response({"error": "Invalid test IDs"}, status=400)
@@ -1072,15 +1082,15 @@ def import_questions(request):
             test=target_test,
             text=q.text,
             type=q.type,
-            options=q.options,
-            correct_answer=q.correct_answer
+            options=json.loads(json.dumps(q.options)),  # Ensure deep copy
+            correct_answer=json.loads(json.dumps(q.correct_answer))
         )
-    
-    # Optional: Update question count in target test
+
     target_test.total_questions = Question.objects.filter(test=target_test).count()
     target_test.save()
 
-    return Response({"message": "Questions imported successfully!"})
+    return Response({"message": "Questions imported successfully!"}, status=201)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -1301,7 +1311,7 @@ def leaderboard(request):
 
 def assign_badges(score, total_questions):
     badges = []
-    
+   
     # ✅ Ensure score and total_questions are not None
     score = score if score is not None else 0
     total_questions = total_questions if total_questions is not None else 0
@@ -1312,7 +1322,7 @@ def assign_badges(score, total_questions):
         badges.append("Silver Badge")
     elif score >= 50:
         badges.append("Bronze Badge")  
-        
+       
     return badges
 @api_view(['POST'])
 def upload_allowed_emails(request):
@@ -1418,7 +1428,7 @@ def create(self, request):
             type=q.get("type", ""),
             options=q.get("options", []),  # ✅ Default empty list if missing
             correct_answer=q.get("correct_answer", [])
-            
+           
         )
 
     return Response(TestSerializer(test).data, status=status.HTTP_201_CREATED)
@@ -1610,7 +1620,7 @@ def complete_test(user, test_attempt):
 
     # Create a notification for the admin
     admin_message = f"User  {user.username} has completed the test: {test_attempt.test.title}."
-    
+   
     # Fetch all admin users (assuming they are marked as staff)
     admin_users = CustomUser.objects.filter(is_staff=True)  # Adjust this query based on your admin user setup
     for admin in admin_users:
@@ -1641,7 +1651,7 @@ def save_consent(request, test_id):
             location = data.get("location", False)
             network = data.get("network", False)
             phone = data.get("phone", False)
-            
+           
             # Save the consent data (or update existing attempt)
             test_attempt, created = TestAttempt.objects.get_or_create(
                 user=request.user,
@@ -1689,9 +1699,15 @@ class UserAnswerViewSet(viewsets.ModelViewSet):
             )
 
         return Response({"message": "Answers saved successfully"}, status=status.HTTP_201_CREATED)
-    
-import re
+   
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Test, Question
+import csv, io, json, re
 from PyPDF2 import PdfReader
+
 class UploadQuestionsView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
@@ -1707,112 +1723,202 @@ class UploadQuestionsView(APIView):
         except Test.DoesNotExist:
             return Response({'error': 'Test not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        # CSV UPLOAD
         if file.name.endswith('.csv'):
-            try:
-                decoded_file = file.read().decode('utf-8')
-                io_string = io.StringIO(decoded_file)
-                reader = csv.DictReader(io_string)
+            decoded_file = file.read().decode('utf-8')
+            io_string = io.StringIO(decoded_file)
+            reader = csv.DictReader(io_string)
 
-                for row in reader:
-                    try:
-                        Question.objects.create(
-                            test=test,
-                            text=row['text'],
-                            type=row['type'],
-                            options=json.loads(row.get('options', '[]')),
-                            correct_answer=json.loads(row.get('correct_answer', '[]')),
-                        )
-                    except Exception as e:
-                        print(f"Error saving question from CSV: {e}")
-                        return Response({'error': f"CSV Processing Failed: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+            for row in reader:
+                try:
+                    Question.objects.create(
+                        test=test,
+                        text=row['text'],
+                        type=row['type'],
+                        options=json.loads(row.get('options', '[]')),
+                        correct_answer=json.loads(row.get('correct_answer', '[]')),
+                    )
+                except Exception as e:
+                    return Response({'error': f"Failed to process row: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-            except Exception as e:
-                print(f"Error processing CSV: {e}")
-                return Response({'error': f"CSV Processing Failed: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # PDF UPLOAD
         elif file.name.endswith('.pdf'):
-            try:
-                pdf_reader = PdfReader(file)
-                full_text = ''
-                for page in pdf_reader.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        full_text += page_text + '\n'
+            pdf_reader = PdfReader(file)
+            lines = []
+            for page in pdf_reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    lines.extend(page_text.strip().split('\n'))
 
-                print(f"Extracted Text: {full_text[:500]}...")  # Debugging PDF text extraction
+            questions = []
+            current_block = []
 
-                question_blocks = full_text.strip().split('\n\n')
-                print(f"Extracted {len(question_blocks)} question blocks from PDF")
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                # Start new block when a question line appears
+                if re.match(r'^[A-Z].*\?$', line) or '____' in line or '__________' in line:
+                    if current_block:
+                        questions.append(current_block)
+                    current_block = [line]
+                else:
+                    current_block.append(line)
 
-                for block in question_blocks:
-                    try:
-                        lines = block.strip().split('\n')
-                        if not lines:
-                            continue
+            if current_block:
+                questions.append(current_block)
 
-                        question_text = lines[0].strip()
-                        options = []
-                        correct_answer = []
-                        answer_line = None
+            questions_created = 0
 
-                        # Find answer line and remove it
-                        for i, line in enumerate(lines):
-                            if line.lower().startswith('answer:'):
-                                answer_line = line
-                                lines.pop(i)
-                                break
+            for block in questions:
+                question_text = block[0]
+                options = []
+                correct_answer = []
+                answer_line = None
 
-                        # Extract options
-                        for line in lines[1:]:
-                            match = re.match(r'^(\d+)\.\s*(.+)', line.strip())
-                            if match:
-                                options.append(match.group(2).strip())
+                for line in block[1:]:
+                    if line.lower().startswith('answer:'):
+                        answer_line = line
+                        continue
+                    match = re.match(r'^(\d+)\.\s*(.+)', line.strip())
+                    if match:
+                        options.append(match.group(2).strip())
 
-                        # Determine question type
-                        if '____' in question_text or '__________' in question_text:
-                            q_type = 'fillintheblank'
-                            if answer_line:
-                                correct_answer = [answer_line.split(':', 1)[1].strip()]
-                        elif len(options) == 2 and set(opt.lower() for opt in options) == {"true", "false"}:
-                            q_type = 'truefalse'
-                            if answer_line:
-                                idx = int(answer_line.split(':', 1)[1].strip()) - 1
-                                correct_answer = [options[idx]] if 0 <= idx < len(options) else []
-                        elif answer_line and ',' in answer_line:
-                            q_type = 'multipleresponse'
-                            indices = [int(i.strip()) - 1 for i in answer_line.split(':', 1)[1].split(',')]
-                            correct_answer = [options[i] for i in indices if 0 <= i < len(options)]
-                        elif options:
-                            q_type = 'multiplechoice'
-                            if answer_line:
-                                idx = int(answer_line.split(':', 1)[1].strip()) - 1
-                                correct_answer = [options[idx]] if 0 <= idx < len(options) else []
-                        else:
-                            q_type = 'fillintheblank'
+                if '____' in question_text or '__________' in question_text:
+                    q_type = 'fillintheblank'
+                    if answer_line:
+                        correct_answer = [answer_line.split(':', 1)[1].strip()]
+                elif len(options) == 2 and set(opt.lower() for opt in options) == {"true", "false"}:
+                    q_type = 'truefalse'
+                    if answer_line:
+                        correct_answer = [answer_line.split(':', 1)[1].strip().capitalize()]
+                elif answer_line and ',' in answer_line:
+                    q_type = 'multipleresponse'
+                    indices = [int(i.strip()) - 1 for i in answer_line.split(':', 1)[1].split(',')]
+                    correct_answer = [options[i] for i in indices if 0 <= i < len(options)]
+                elif options:
+                    q_type = 'multiplechoice'
+                    if answer_line:
+                        idx = int(answer_line.split(':', 1)[1].strip()) - 1
+                        if 0 <= idx < len(options):
+                            correct_answer = [options[idx]]
+                else:
+                    q_type = 'fillintheblank'
+                    if answer_line:
+                        correct_answer = [answer_line.split(':', 1)[1].strip()]
 
-                        # Save question
-                        try:
-                            Question.objects.create(
-                                test=test,
-                                text=question_text,
-                                type=q_type,
-                                options=options,
-                                correct_answer=correct_answer
-                            )
-                            print(f"Successfully created question: {question_text[:50]}")  # Debug success message
-                        except Exception as e:
-                            print(f"Error creating question from PDF: {e}")
+                Question.objects.create(
+                    test=test,
+                    text=question_text,
+                    type=q_type,
+                    options=options,
+                    correct_answer=correct_answer
+                )
+                questions_created += 1
 
-                    except Exception as inner_e:
-                        print(f"Error processing block: {block[:50]} - {inner_e}")
-
-            except Exception as outer_e:
-                print(f"Error processing PDF: {outer_e}")
-                return Response({'error': f"PDF Processing Failed: {str(outer_e)}"}, status=status.HTTP_400_BAD_REQUEST)
+            if questions_created == 0:
+                return Response({'error': 'No valid questions found in PDF.'}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
             return Response({'error': 'Unsupported file type. Only .csv and .pdf allowed.'}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'message': 'Questions imported successfully'}, status=status.HTTP_201_CREATED)
+
+class CaptureImageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if 'image' not in request.FILES:
+            return Response(
+                {'success': False, 'message': 'No image provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            image_file = request.FILES['image']
+            user = request.user
+
+            # Create user-specific directory
+            user_dir = os.path.join(settings.MEDIA_ROOT, 'captures', str(user.id))
+            os.makedirs(user_dir, exist_ok=True)
+
+            # Read image content into memory once
+            image_bytes = image_file.read()
+
+            # Save image permanently
+            filename = f"capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+            file_path = os.path.join(user_dir, filename)
+            default_storage.save(file_path, ContentFile(image_bytes))
+
+            # Write image to temporary file for OpenCV
+            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
+                tmp.write(image_bytes)
+                tmp_path = tmp.name
+
+            try:
+                # Load image using OpenCV
+                img = cv2.imread(tmp_path)
+                if img is None:
+                    raise ValueError("Could not read the image file")
+
+                # Convert to grayscale
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+                # Load OpenCV face detector
+                face_cascade = cv2.CascadeClassifier(
+                    cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+                )
+
+                # Detect faces
+                faces = face_cascade.detectMultiScale(
+                    gray,
+                    scaleFactor=1.1,
+                    minNeighbors=5,
+                    minSize=(100, 100)
+                )
+
+                # Validation logic
+                validation = {
+                    'face_detected': len(faces) > 0,
+                    'multiple_faces': len(faces) > 1,
+                    'looking_straight': False,
+                    'is_valid': False,
+                    'message': ''
+                }
+
+                if not validation['face_detected']:
+                    validation['message'] = 'No face detected'
+                elif validation['multiple_faces']:
+                    validation['message'] = 'Multiple faces detected'
+                else:
+                    # Check if face is centered
+                    (x, y, w, h) = faces[0]
+                    face_center_x = x + w / 2
+                    img_center_x = img.shape[1] / 2
+
+                    if abs(face_center_x - img_center_x) < img.shape[1] * 0.1:
+                        validation['looking_straight'] = True
+                        validation['is_valid'] = True
+                        validation['message'] = 'Valid capture'
+                    else:
+                        validation['message'] = 'Face not centered'
+
+                return Response({
+                    'success': validation['is_valid'],
+                    'message': validation['message'],
+                    'validation': validation,
+                    'image_url': default_storage.url(file_path),
+                    'user': {
+                        'id': user.id,
+                        'username': user.username
+                    }
+                })
+
+            finally:
+                # Delete temp file
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+
+        except Exception as e:
+            return Response(
+                {'success': False, 'message': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
