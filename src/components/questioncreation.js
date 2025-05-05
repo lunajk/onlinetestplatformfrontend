@@ -444,7 +444,7 @@ const QuestionCreator = () => {
           </Alert>
         </Snackbar>
       </Container>
- <Box
+      <Box
           sx={{
             position: "fixed",
             bottom: 0,
@@ -457,7 +457,7 @@ const QuestionCreator = () => {
           }}
         >
           <Typography variant="body2" sx={{ color: "white", marginBottom: "2px" }}>
-            © {new Date().getFullYear()} SmartBridge Online Test Platform. All rights reserved.
+            © {new Date().getFullYear()} Skill Bridge Online Test Platform. All rights reserved.
           </Typography>
           <Box sx={{ display: "flex", justifyContent: "center", gap: "2px", marginTop: "2px" }}>
             <IconButton color="inherit" onClick={() => window.open("https://twitter.com", "_blank")}><TwitterIcon /></IconButton>
@@ -465,7 +465,6 @@ const QuestionCreator = () => {
             <IconButton color="inherit" onClick={() => window.open("https://instagram.com", "_blank")}><InstagramIcon /></IconButton>
           </Box>
           </Box>
-    
     </Box>
   );
 };

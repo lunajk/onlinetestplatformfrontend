@@ -1473,7 +1473,100 @@ const handleSubmit = async () => {
 
   return (
     <>
+<Drawer open={isSidebarOpen} onClose={toggleSidebar}>
+        <Box sx={{ width: 220, textAlign: "center", padding: "12px" }}>
+        <img
+              src={logo}
+              alt="Logo"
+              style={{
+                maxWidth: "100%",
+                height: "auto",
+                marginBottom: "16px",
+                borderRadius: "8px",
+              }}
+            />
+ <List>
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/user-dashboard')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      textAlign: "left",
+      fontSize: "16px", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    Dashboard
+  </Button>
+</ListItem>
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/test-creation')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      fontSize: "16px",
+      textAlign: "left", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    Test Creation
+  </Button>
+</ListItem>
 
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/attempted-tests')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      fontSize: "16px",
+      textAlign: "left", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    Attempted Tests
+  </Button>
+</ListItem>
+
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/usersetting')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      fontSize: "16px",
+      textAlign: "left", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    Settings
+  </Button>
+</ListItem>
+
+<ListItem sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+  <Button
+    onClick={() => navigate('/logout')}
+    sx={{
+      color: "#003366", // Dark blue color
+      fontWeight: "bold",
+      fontSize: "16px",
+      textAlign: "left", // Align the text to the left
+      width: "100%", // Take up full width of the ListItem
+      justifyContent: "flex-start", // Align the button content to the left
+    }}
+  >
+    Logout
+  </Button>
+</ListItem>
+        </List>
+        </Box>
+      </Drawer>
       <AppBar position="fixed" sx={{ backgroundColor: "#003366", padding: "4px 8px" }}>
         <Toolbar sx={{ padding: "0" }}>
           <IconButton color="inherit" edge="start" sx={{ marginRight: 2 }} onClick={toggleSidebar}>
@@ -1482,7 +1575,11 @@ const handleSubmit = async () => {
           <Typography variant="h6" sx={{ flexGrow: 1, fontSize: "1rem" }}>
             Skill Bridge Online Test Platform
           </Typography>
-
+          <Button color="inherit" onClick={() => navigate("/")}>Home</Button>
+          <Button color="inherit" onClick={() => navigate("/userprofile")}>User Profile</Button>
+          <Button color="inherit" onClick={() => navigate("/attempted-tests")}>Test List</Button>
+          <Button color="inherit" onClick={() => navigate("/usersetting")}>Settings</Button>
+          <Button color="inherit" onClick={() => navigate("/logout")}>Logout</Button>
         </Toolbar>
       </AppBar>
       <Box sx={{ position: "fixed", top: "64px", bottom: "80px", left: 0, right: 0, display: "flex", flexDirection: "column", padding: "16px", overflowY: "auto", height: "calc(100vh - 144px)", width: "100vw", maxWidth: "100%", margin: 0 }}>
@@ -1575,7 +1672,7 @@ const handleSubmit = async () => {
           </Box>
         )}
       </Box>
- <Box
+      <Box
           sx={{
             position: "fixed",
             bottom: 0,
@@ -1588,7 +1685,7 @@ const handleSubmit = async () => {
           }}
         >
           <Typography variant="body2" sx={{ color: "white", marginBottom: "2px" }}>
-            © {new Date().getFullYear()} SmartBridge Online Test Platform. All rights reserved.
+            © {new Date().getFullYear()} Skill Bridge Online Test Platform. All rights reserved.
           </Typography>
           <Box sx={{ display: "flex", justifyContent: "center", gap: "2px", marginTop: "2px" }}>
             <IconButton color="inherit" onClick={() => window.open("https://twitter.com", "_blank")}><TwitterIcon /></IconButton>
@@ -1596,7 +1693,6 @@ const handleSubmit = async () => {
             <IconButton color="inherit" onClick={() => window.open("https://instagram.com", "_blank")}><InstagramIcon /></IconButton>
           </Box>
           </Box>
-    
     </>
   );
 };

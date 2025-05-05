@@ -350,31 +350,35 @@ const ManageTestsPage = () => {
           message={snackbarMessage}
         />
         <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 400,
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-            borderRadius: 2,
-          }}
-        >
-          <Typography variant="h6">Test Duplicated Successfully!</Typography>
-          <Typography sx={{ mt: 2 }}>Share this link: <strong style={{ color: "blue" }}>{testLink}</strong></Typography>
-          <Button
-            onClick={() => navigator.clipboard.writeText(testLink)}
-            startIcon={<ContentCopy />}
-            variant="contained"
-            sx={{ mt: 2 }}
-          >
-            Copy Link
-          </Button>
-        </Box>
-      </Modal>
+  <Box
+    sx={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: 600,  // Increased width for larger modal
+      height: 400, // Optional: Set a height if you want to control the height of the modal
+      bgcolor: "background.paper",
+      boxShadow: 24,
+      p: 6,  // Increased padding for a more spacious design
+      borderRadius: 2,
+    }}
+  >
+    <Typography variant="h6" sx={{ fontSize: 20 }}>Test Duplicated Successfully!</Typography>  {/* Adjusted font size */}
+    <Typography sx={{ mt: 2, fontSize: 16 }}>
+      Share this link: <strong style={{ color: "blue" }}>{testLink}</strong>
+    </Typography>
+    <Button
+      onClick={() => navigator.clipboard.writeText(testLink)}
+      startIcon={<ContentCopy />}
+      variant="contained"
+      sx={{ mt: 3 }}  // Increased margin top for spacing
+    >
+      Copy Link
+    </Button>
+  </Box>
+</Modal>
+
         <br/>  <br/>  <br/>  <br/>
         <Box
           sx={{
@@ -389,7 +393,7 @@ const ManageTestsPage = () => {
           }}
         >
           <Typography variant="body2" sx={{ color: "white", marginBottom: "2px" }}>
-            © {new Date().getFullYear()} SmartBridge Online Test Platform. All rights reserved.
+            © {new Date().getFullYear()} Skill Bridge Online Test Platform. All rights reserved.
           </Typography>
           <Box sx={{ display: "flex", justifyContent: "center", gap: "2px", marginTop: "2px" }}>
             <IconButton color="inherit" onClick={() => window.open("https://twitter.com", "_blank")}><TwitterIcon /></IconButton>
@@ -397,7 +401,6 @@ const ManageTestsPage = () => {
             <IconButton color="inherit" onClick={() => window.open("https://instagram.com", "_blank")}><InstagramIcon /></IconButton>
           </Box>
           </Box>
-    
       </Box>
     </Box>
   );
