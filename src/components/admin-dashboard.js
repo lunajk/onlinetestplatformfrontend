@@ -54,20 +54,6 @@ const AdminDashboard = () => {
   const [openNotifications, setOpenNotifications] = useState(false); // New state for notifications modal
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const userRole = localStorage.getItem("role");
-    if (userRole !== "admin") {
-      setOpenModal(true);
-    } else {
-      fetchData();
-    }
-  }, []);
-
-  const handleClose = () => {
-    setOpenModal(false);
-    navigate("/");
-  };
-
   const fetchData = async () => {
     const token = localStorage.getItem("user_token");
     const headers = {
@@ -235,43 +221,6 @@ const AdminDashboard = () => {
 
   return (
     <>
-<div>
-        {/* Admin Dashboard Content */}
-        <h1>Welcome to Admin Dashboard</h1>
-
-        {/* Modal for Unauthorized Access */}
-        <Modal open={openModal} onClose={handleClose}>
-          <Box
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: 400,
-              bgcolor: "background.paper",
-              boxShadow: 24,
-              p: 4,
-              textAlign: "center",
-              borderRadius: 2,
-            }}
-          >
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold", color: "red" }}>
-              Access Denied!
-            </Typography>
-            <Typography variant="body1">
-              This page is restricted to admins only.
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={handleClose}
-              sx={{ mt: 2, backgroundColor: "#003366", "&:hover": { backgroundColor: "#002244" } }}
-            >
-              Go Back
-            </Button>
-          </Box>
-        </Modal>
-      </div>
-
       <Drawer open={isSidebarOpen} onClose={toggleSidebar}>
   <Box sx={{ width: 220, textAlign: "center", padding: "12px" }}>
     {isSidebarOpen && (

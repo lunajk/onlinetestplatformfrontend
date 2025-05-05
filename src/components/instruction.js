@@ -36,7 +36,7 @@ const InstructionPage = () => {
      const [faceDescriptor, setFaceDescriptor] = useState(null);
 
     useEffect(() => {
-        const userToken = localStorage.getItem("testUserToken");
+        const userToken = localStorage.getItem("testUserToken") || localStorage.getItem("user_token");
       
         if (uuid) {
           axios.get(`https://onlinetestcreationbackend.onrender.com/api/decode-test-uuid/${uuid}/`)
