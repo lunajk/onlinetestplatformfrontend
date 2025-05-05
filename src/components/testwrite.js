@@ -167,7 +167,7 @@ export default function OnlineTestPage() {
         setTimeLeft(2559);
         setCurrentQuestionTime(questionTime);
     };
-    const userToken = localStorage.getItem("user_token");
+    const userToken = localStorage.getItem('testUserToken');
 
     const decodeUUID = useCallback(async () => {
         try {

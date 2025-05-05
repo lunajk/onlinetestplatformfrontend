@@ -45,7 +45,8 @@ const PreTestForm = () => {
       if (response.ok) {
         // 👇 Save new token if backend sends it
         if (data.token) {
-          localStorage.setItem('userToken', data.token);
+          localStorage.setItem('testUserToken', data.token);  // ✅ Keeps them separate
+
         }
   
         navigate(`/smartbridge/online-test-assessment/${uuid}/instructions/`);

@@ -36,7 +36,7 @@ const InstructionPage = () => {
      const [faceDescriptor, setFaceDescriptor] = useState(null);
 
     useEffect(() => {
-        const userToken = localStorage.getItem("user_token");
+        const userToken = localStorage.getItem("testUserToken");
       
         if (uuid) {
           axios.get(`https://onlinetestcreationbackend.onrender.com/api/decode-test-uuid/${uuid}/`)
@@ -219,7 +219,7 @@ const InstructionPage = () => {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'Authorization': `Token ${localStorage.getItem('user_token')}`,
+                    'Authorization': `Token ${localStorage.getItem('testUserToken')}`,
                 },
             });
 
@@ -273,7 +273,7 @@ const InstructionPage = () => {
             return;
         }
 
-        const userToken = localStorage.getItem("user_token");
+        const userToken = localStorage.getItem("testUserToken");
 
         fetch(`https://onlinetestcreationbackend.onrender.com/api/tests/${testId}/save_consent/`, {
             method: "POST",
