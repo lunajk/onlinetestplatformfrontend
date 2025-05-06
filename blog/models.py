@@ -102,18 +102,6 @@ class Question(models.Model):
     type = models.CharField(max_length=50, choices=QUESTION_TYPES)
     options = models.JSONField(default=list, blank=True, null=True)  # ✅ Default to empty list
     correct_answer = models.JSONField(default=list, blank=True)
-
-class TestUser(models.Model):
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    test = models.ForeignKey("Test", on_delete=models.CASCADE, null=True)
-    token = models.CharField(max_length=64, unique=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        if not self.token:
-            self.token = secrets.token_hex(32)
-        super().save(*args, **kwargs)
     
 class AllowedParticipant(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='allowed_participants')
@@ -498,6 +486,13 @@ class CompletedTest(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.test_name} ({self.status})"
     
+class TestUser(models.Model):
+    name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name  
 from django.utils import timezone
 
 def save_completed_test(user, test_attempt):

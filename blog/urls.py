@@ -7,7 +7,7 @@ from django.conf import settings
 from . import views
 from django.conf.urls.static import static
 from .views import (UploadQuestionsView,
-    LoginView, RegisterView,RecentActivityDeleteView,TestLoginAPIView,get_csrf_token, get_test_questions,create_test, CategoryListCreateView, get_tests,
+    LoginView, RegisterView,RecentActivityDeleteView,get_csrf_token, get_test_questions,create_test, CategoryListCreateView, get_tests,
     CategoryRetrieveUpdateDestroyView, UserTestStatsAPIView, TestListCreateView, AvailableTestsView,
     RecentActivityListCreateView, QuestionCreateAPIView, TestDetailAPIView, ManageTestsViewSet,
     QuestionListCreateView, QuestionDetailAPIView, UserResponseListCreateView,complete_test,
@@ -40,7 +40,6 @@ test_attempt_viewset = TestAttemptViewSet.as_view({
     'get': 'get_user_rank', # Maps GET requests to get_user_statistics
 })
 urlpatterns = [
-    path('test-login/', TestLoginAPIView.as_view(), name='test-login'),
     path('capture/', CaptureImageView.as_view(), name='capture-image'),
     path('questions/tests/<int:test_id>/', views.get_questions_from_test, name='get_questions_from_test'),
     path('decode-test-uuid/<str:uuid_str>/', views.decode_uuid_and_get_test_id),

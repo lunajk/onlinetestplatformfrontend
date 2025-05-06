@@ -1,6 +1,6 @@
-from rest_framework.authentication import BaseAuthentication 
+from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
-from .models import CustomUser, TestUser  # Make sure TestUserToken is imported
+from .models import CustomUser  
 
 class UserTokenAuthentication(BaseAuthentication):
     def authenticate(self, request):
@@ -11,16 +11,9 @@ class UserTokenAuthentication(BaseAuthentication):
 
         token = auth_header.split(" ")[1]  
 
-        # 1. Try to find user by user_token
         try:
-            user = CustomUser.objects.get(user_token=token)
-            return (user, None)
+            user = CustomUser.objects.get(user_token=token)  # Check latest token
         except CustomUser.DoesNotExist:
-            pass
-
-        # 2. Try to find test user token
-        try:
-            test_user_token = TestUser.objects.get(token=token)
-            return (test_user_token.user, None)  # Make sure TestUserToken has a ForeignKey to CustomUser as `user`
-        except TestUser.DoesNotExist:
             raise AuthenticationFailed("Invalid token")
+
+        return (user, None)

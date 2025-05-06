@@ -19,7 +19,7 @@ from django.db.models import Max, Sum, Count
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny, IsAdminUser
 from .models import Test, Question, TestAttempt, UserAnswer
-from .serializers import TestSerializer, QuestionSerializer,TestUser,TestAttemptSerializer, UserAnswerSerializer,ReviewAnswerSerializer,ReviewSerializer
+from .serializers import TestSerializer, QuestionSerializer, TestAttemptSerializer, UserAnswerSerializer,ReviewAnswerSerializer,ReviewSerializer
 from django.utils.timezone import now
 from django.db.models import Count, Avg, Max
 from django.shortcuts import get_object_or_404
@@ -1115,7 +1115,11 @@ def public_tests(request):
     serializer = TestSerializer(tests, many=True)
     return Response(serializer.data)
 
-from .models import TestUser  # Import the new model
+import secrets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from .models import Test, AllowedParticipant, TestUser
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -1126,8 +1130,8 @@ def register_test_user(request):
     email = data.get('email')
     test_id = data.get('test_id')
 
-    if not test_id or not email or not name:
-        return Response({"error": "name, email and test_id required."}, status=400)
+    if not test_id or not email:
+        return Response({"error": "test_id and email required."}, status=400)
 
     normalized_email = email.strip().lower()
 
@@ -1139,42 +1143,26 @@ def register_test_user(request):
     if not AllowedParticipant.objects.filter(test=test, email=normalized_email).exists():
         return Response({"error": "You are not allowed to take this test."}, status=403)
 
-    # ✅ Create or reuse a TestUser (prevent duplicates for the same test & email)
-    test_user, created = TestUser.objects.get_or_create(
-        email=normalized_email,
-        test=test,
-        defaults={"name": name, "token": secrets.token_hex(16)}
-    )
+    # ✅ Check if test user already exists
+    existing_user = TestUser.objects.filter(test=test, email=normalized_email).first()
+
+    if existing_user:
+        token = existing_user.token
+    else:
+        # Create a new TestUser and token
+        token = secrets.token_urlsafe(16)
+        existing_user = TestUser.objects.create(
+            name=name,
+            email=normalized_email,
+            test=test,
+            token=token
+        )
 
     return Response({
         "message": "Access granted.",
-        "token": test_user.token
+        "token": token
     }, status=200)
 
-class TestLoginAPIView(APIView):
-    def post(self, request):
-        email = request.data.get('email')
-        name = request.data.get('name')
-
-        if not email or not name:
-            return Response({'error': 'Email and name are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Get or create the user
-        user, created = CustomUser.objects.get_or_create(email=email, defaults={
-            'username': email.split('@')[0],
-            'first_name': name,
-            'role': 'test_user',
-            'is_active': True,
-        })
-
-        # Generate or reuse test token
-        token, _ = TestUser.objects.get_or_create(user=user)
-
-        return Response({
-            'testUserToken': token.token,
-            'user_id': user.id,
-        }, status=status.HTTP_200_OK)
-    
 @api_view(['GET'])
 def get_leaderboard(request):
     leaderboard = LeaderboardEntry.objects.all().order_by('rank')
