@@ -1845,19 +1845,21 @@ class CaptureImageView(APIView):
             image_file = request.FILES['image']
             user = request.user
 
-            # Create user-specific directory
-            user_dir = os.path.join(settings.MEDIA_ROOT, 'captures', str(user.id))
-            os.makedirs(user_dir, exist_ok=True)
+            # Create filename and relative/absolute paths
+            filename = f"capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+            relative_path = os.path.join('captures', str(user.id), filename)
+            absolute_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+
+            # Ensure user directory exists
+            os.makedirs(os.path.dirname(absolute_path), exist_ok=True)
 
             # Read image content into memory once
             image_bytes = image_file.read()
 
-            # Save image permanently
-            filename = f"capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
-            file_path = os.path.join(user_dir, filename)
-            default_storage.save(file_path, ContentFile(image_bytes))
+            # Save image permanently using default_storage
+            default_storage.save(relative_path, ContentFile(image_bytes))
 
-            # Write image to temporary file for OpenCV
+            # Write to temp file for OpenCV
             with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
                 tmp.write(image_bytes)
                 tmp_path = tmp.name
@@ -1898,7 +1900,6 @@ class CaptureImageView(APIView):
                 elif validation['multiple_faces']:
                     validation['message'] = 'Multiple faces detected'
                 else:
-                    # Check if face is centered
                     (x, y, w, h) = faces[0]
                     face_center_x = x + w / 2
                     img_center_x = img.shape[1] / 2
@@ -1914,7 +1915,7 @@ class CaptureImageView(APIView):
                     'success': validation['is_valid'],
                     'message': validation['message'],
                     'validation': validation,
-                    'image_url': default_storage.url(file_path),
+                    'image_url': default_storage.url(relative_path),
                     'user': {
                         'id': user.id,
                         'username': user.username
@@ -1922,7 +1923,6 @@ class CaptureImageView(APIView):
                 })
 
             finally:
-                # Delete temp file
                 if os.path.exists(tmp_path):
                     os.remove(tmp_path)
 
