@@ -25,32 +25,44 @@ const PreTestForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
+    const userData = {
+      name,
+      email,
+      test_id: testId,
+    };
+  
     try {
-      const response = await fetch("https://onlinetestcreationbackend.onrender.com/api/test-login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email }),
-      });
-  
-      const data = await response.json();
-  
-      if (response.ok) {
-        if (data.testUserToken) {
-          localStorage.setItem("testUserToken", data.testUserToken);
+
+      if (!localStorage.getItem("userToken")) {
+        const response = await fetch("https://onlinetestcreationbackend.onrender.com/api/test-users/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userData),
+        });
+      
+        const data = await response.json();
+      
+        if (response.ok) {
+          if (data.token) {
+            localStorage.setItem('userToken', data.token);
+          }
+          navigate(`/smartbridge/online-test-assessment/${uuid}/instructions/`);
+        } else {
+          alert(data.message || "You are not allowed to take this test.");
         }
-  
-        navigate(`/smartbridge/online-test-assessment/${uuid}/instructions/`);
       } else {
-        alert(data.message || "You are not allowed to take this test.");
+        navigate(`/smartbridge/online-test-assessment/${uuid}/instructions/`);
       }
+      
     } catch (error) {
       console.error("Error:", error);
       alert("Something went wrong!");
     }
   };
   
+
   return (
     <Box display="flex" justifyContent="center" alignItems="center" height="100vh" bgcolor="#f4f6f8">
       <Card sx={{ width: 350, p: 2, boxShadow: 3, borderRadius: 2 }}>
