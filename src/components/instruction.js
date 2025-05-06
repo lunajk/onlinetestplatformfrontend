@@ -296,54 +296,119 @@ const InstructionPage = () => {
     if (error) return <Typography color="error">{error}</Typography>;
 
     return (
+        
         <Paper elevation={4} sx={{ padding: 4, borderRadius: 2, margin: 'auto', maxWidth: '800px' }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold", color: "#003366", textAlign: "center" }}>
-            Welcome to {testData?.title}
-        </Typography>
-               <Typography variant="h4" sx={{ fontSize: '1.5rem', color: '#1976d2', marginBottom: '16px', fontWeight: '600' }}>
-                 Created By:
-               </Typography>
-               <Typography variant="h5" sx={{ fontSize: '1.25rem', color: '#004d40', marginBottom: '16px', fontWeight: '500' }}>
-                 {testData?.owner_name || "Unknown"}
-               </Typography>
-         
-               <Typography variant="body1" sx={{ fontSize: '1.1rem', color: '#555', marginBottom: '24px' }}>
-                 Date: {new Date(testData?.created_at).toLocaleDateString()}
-               </Typography>
-               <Box sx={{ maxWidth: '800px', textAlign: 'left', marginBottom: '40px' }}>
-                 <Typography variant="h5" sx={{ fontSize: '1.5rem', color: '#003366', marginBottom: '16px', fontWeight: 'bold' }}>
-                   About This Assessment
-                 </Typography>
-                 <Typography variant="body1" sx={{ fontSize: '1rem', color: '#333', marginBottom: '16px', lineHeight: '1.6' }}>
-                   {testData?.description}
-                 </Typography>
-               </Box>
-        <Grid container spacing={2} justifyContent="center">
-            <Grid item xs={12} sm={4} md={3}><InfoBox icon={<TimerIcon />} text={`${testData?.time_limit} mins`} label="Time Limit" /></Grid>
-            <Grid item xs={12} sm={4} md={3}><InfoBox icon={<AssignmentIcon />} text={testData?.total_questions} label="Total Questions" /></Grid>
-            <Grid item xs={12} sm={4} md={3}><InfoBox icon={<CheckCircleIcon />} text="Multiple Formats" label="MCQ, True/False, Fill-in-the-Blank" /></Grid>
-        </Grid>
-        
-        {/* Instructions */}
-        <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#003366", mb: 2 }}>
-                General Instructions
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <Grid container spacing={2}>
-                {(testData?.instructions || "").split('.').map((instruction, index) => (
-                    instruction.trim() && (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                            <Paper sx={{ padding: 2, display: "flex", alignItems: "center", borderRadius: 1 }}>
-                                <CheckCircleIcon sx={{ color: "#003366", mr: 2 }} />
-                                <Typography variant="body2">{instruction.trim() + '.'}</Typography>
-                            </Paper>
-                        </Grid>
-                    )
-                ))}
-            </Grid>
-        </Box>
-        
+<br/><br/><br/>
+<Box sx={{ maxWidth: "1000px", mx: "auto", textAlign: "center", py: 4, px: 2 }}>
+  <Typography
+    variant="h3"
+    gutterBottom
+    sx={{
+      fontWeight: "700",
+      color: "#003366",
+      fontFamily: "'Roboto Slab', serif",
+    }}
+  >
+    Welcome to {testData?.title}
+  </Typography>
+
+  <Typography
+    variant="h5"
+    sx={{
+      fontSize: "1.25rem",
+      color: "#1976d2",
+      marginBottom: 1,
+      fontWeight: 600,
+    }}
+  >
+    Created By:
+  </Typography>
+  <Typography
+    variant="h6"
+    sx={{
+      fontSize: "1.15rem",
+      color: "#004d40",
+      marginBottom: 2,
+      fontWeight: 500,
+    }}
+  >
+    {testData?.owner_name || "Unknown"}
+  </Typography>
+
+  <Typography
+    variant="body1"
+    sx={{ fontSize: "1.1rem", color: "#555", marginBottom: 3 }}
+  >
+    Date: {new Date(testData?.created_at).toLocaleDateString()}
+  </Typography>
+
+  <Box sx={{ maxWidth: "800px", mx: "auto", mb: 4 }}>
+    <Typography
+      variant="h5"
+      sx={{
+        fontSize: "1.5rem",
+        color: "#003366",
+        marginBottom: 2,
+        fontWeight: "bold",
+      }}
+    >
+      About This Assessment
+    </Typography>
+    <Typography
+      variant="body1"
+      sx={{
+        fontSize: "1rem",
+        color: "#333",
+        marginBottom: 3,
+        lineHeight: 1.6,
+        textAlign: "justify",
+      }}
+    >
+      {testData?.description}
+    </Typography>
+  </Box>
+
+  <Grid container spacing={2} justifyContent="center" sx={{ mb: 5 }}>
+    <Grid item xs={12} sm={4} md={3}>
+      <InfoBox icon={<TimerIcon />} text={`${testData?.time_limit} mins`} label="Time Limit" />
+    </Grid>
+    <Grid item xs={12} sm={4} md={3}>
+      <InfoBox icon={<AssignmentIcon />} text={testData?.total_questions} label="Total Questions" />
+    </Grid>
+    <Grid item xs={12} sm={4} md={3}>
+      <InfoBox icon={<CheckCircleIcon />} text="Multiple Formats" label="MCQ, True/False, Fill-in-the-Blank" />
+    </Grid>
+  </Grid>
+
+  <Box>
+    <Typography
+      variant="h6"
+      sx={{
+        fontWeight: "bold",
+        color: "#003366",
+        marginBottom: 2,
+      }}
+    >
+      General Instructions
+    </Typography>
+    <Divider sx={{ mb: 3 }} />
+    <Grid container spacing={2} justifyContent="center">
+      {(testData?.instructions || "").split('.').map((instruction, index) =>
+        instruction.trim() ? (
+          <Grid item xs={12} sm={6} md={4} key={index}>
+            <Paper sx={{ padding: 2, display: "flex", alignItems: "center", borderRadius: 2, boxShadow: 2 }}>
+              <CheckCircleIcon sx={{ color: "#003366", mr: 2 }} />
+              <Typography variant="body2" sx={{ fontSize: "0.95rem" }}>
+                {instruction.trim() + '.'}
+              </Typography>
+            </Paper>
+          </Grid>
+        ) : null
+      )}
+    </Grid>
+  </Box>
+</Box>
+
         
         {/* Face Verification Section */}
         <Box sx={{ mt: 4, mb: 4 }}>
