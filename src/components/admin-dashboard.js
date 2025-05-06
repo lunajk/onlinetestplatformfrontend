@@ -23,7 +23,7 @@ import Modal from '@mui/material/Modal';
 
 import { PieChart,Pie, Tooltip, Cell, Legend } from "recharts";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
+const API_BASE_URL = 'https://online-test-creation-1.onrender.com/api';
 const COLORS = ["#003366", "#0088FE", "#FFBB28", "#FF8042", "#00C49F"];
 const AdminDashboard = () => {
   const [userData, setUserData] = useState({});
@@ -65,6 +65,9 @@ const AdminDashboard = () => {
       acc.push({ name: test.subject, value: 1 });
     }
     return acc;
+  }, []);
+  useEffect(() => {
+    fetchData(); // Fetch data without checking the user role
   }, []);
 
   const fetchData = async () => {
