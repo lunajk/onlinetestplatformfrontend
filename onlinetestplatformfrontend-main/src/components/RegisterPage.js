@@ -29,7 +29,7 @@ const RegisterPage = () => {
         confirmpassword: '', 
         first_name: '', 
         last_name: '', 
-        full_name:'',
+      
         role: 'user' // Default role
     });
    

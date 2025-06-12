@@ -1,0 +1,19 @@
+{
+" username":" bash", 
+        "email": "yu@gmail.com", 
+        "password": "786", 
+       " confirmpassword": "786", 
+       " first_name": "yu", 
+       " last_name": "nus", 
+       " role": "admin"
+}
+
+{
+  "username": "bash",
+  "email": "yu@gmail.com",
+  "password": "786",
+  "confirmpassword": "786",
+  "first_name": "yu",
+  "last_name": "nus",
+  "role": "admin"
+}

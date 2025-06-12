@@ -281,9 +281,10 @@ console.log(user_id)
                     style={{ display: "none" }}
                   />
                 </Box>
-                <Typography variant="h6" sx={{ mt: 2, fontWeight: "bold" }}>
-                  {userData ? userData.full_name : "N/A"}
-                </Typography>
+              <Typography variant="h6" sx={{ mt: 2, fontWeight: "bold" }}>
+  {userData ? `${userData.first_name} ${userData.last_name}` : 'Guest User'}
+</Typography>
+
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
                   {userData ? userData.role : "N/A"}
                 </Typography>

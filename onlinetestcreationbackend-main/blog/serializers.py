@@ -23,7 +23,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email', 'password', 'first_name', 'last_name', 'full_name', 'role']
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {'password': {'write_only': True},    'full_name': {'read_only': True},}
 
     def create(self, validated_data):
         full_name = f"{validated_data.get('first_name', '')} {validated_data.get('last_name', '')}".strip()
