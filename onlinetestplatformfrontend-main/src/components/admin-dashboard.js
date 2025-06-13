@@ -483,26 +483,37 @@ const AdminDashboard = () => {
             
           <Grid item xs={4} sx={{ textAlign: "center" }}>
             {userData?.profile_picture ? (
-              <Avatar
-                src={userData.profile_picture}
-                alt="Profile"
-                sx={{
-                  width: 90,
-                  height: 90,
-                  boxShadow: 2,
-                  border: "3px solid #003366",
-                }}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "https://placehold.co/150x150"; // ✅ Fallback if image fails to load
-                }}
-              />
-            ) : (
-              <Avatar
-                src="https://placehold.co/150x150"
-                sx={{ width: 90, height: 90 }}
-              />
-            )}
+  <Avatar
+    src={userData.profile_picture}
+    alt="Profile"
+    sx={{
+      width: 90,
+      height: 90,
+      boxShadow: 2,
+      border: "3px solid #003366",
+    }}
+    onError={(e) => {
+      e.target.onerror = null;
+      e.target.src = ""; // Fallback to default avatar (no image)
+    }}
+  />
+) : (
+        <Avatar
+          sx={{
+            width: 90,
+            height: 90,
+            boxShadow: 2,
+            border: "3px solid #abb6b8",
+            backgroundColor: "#abb6b8",
+            color: "#fff",
+            fontSize: "32px",
+            fontWeight: "bold",
+          }}
+        >
+          {(userData?.full_name?.[0] || "NA").toUpperCase()}
+        </Avatar>
+      )}
+
           </Grid>
           
               <Grid item xs={8}>

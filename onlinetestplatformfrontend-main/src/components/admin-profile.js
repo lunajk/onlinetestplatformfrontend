@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaUser , FaUpload, FaEdit } from 'react-icons/fa';
+import { FaUser , FaUpload, FaEdit, FaPen } from 'react-icons/fa';
 import {
   
   Toolbar,
@@ -206,7 +206,7 @@ console.log(user_id)
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-
+  
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
@@ -242,47 +242,68 @@ console.log(user_id)
                 <center>Admin Profile</center>
               </Typography>
               <CardContent sx={{ textAlign: "center" }}>
-                <Box sx={{ position: "relative", display: "inline-block" }}>
-                  {image ? (
-                    <img
-                      src={image}
-                      alt="Profile"
-                      style={{
-                        width: "120px",
-                        height: "120px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        border: "4px solid #003366",
-                      }}
-                    />
-                  ) : (
-                    <FaUser  size={80} style={{ color: "#003366" }} />
-                  )}
-                  {isEditing && (
-                    <label htmlFor="upload-image" style={{ cursor: "pointer" }}>
-                      <FaUpload
-                        style={{
-                          position: "absolute",
-                          bottom: "0",
-                          right: "0",
-                          backgroundColor: "#003366",
-                          color: "#fff",
-                          padding: "8px",
-                          borderRadius: "50%",
-                        }}
-                      />
-                    </label>
-                  )}
-                  <input
-                    type="file"
-                    id="upload-image"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    style={{ display: "none" }}
-                  />
-                </Box>
+  <Box sx={{ position: "relative", display: "inline-block" }}>
+    {image ? (
+      <img
+        src={image}
+        alt="Profile"
+        style={{
+          width: "120px",
+          height: "120px",
+          borderRadius: "50%",
+          objectFit: "cover",
+          border: "4px solid #003366",
+        }}
+      />
+    ) : (
+      <Box
+        sx={{
+          width: 120,
+          height: 120,
+          borderRadius: "50%",
+          backgroundColor: "#abb6b8",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
+          fontSize: 40,
+          fontWeight: "bold",
+        }}
+      >
+        {(userData?.full_name?.[0] || "NA").toUpperCase()}
+      </Box>
+    )}
+
+    {isEditing && (
+      <label htmlFor="upload-image" style={{ cursor: "pointer" }}>
+        <FaPen
+          style={{
+            position: "absolute",
+            bottom: "5px",
+            right: "5px",
+            backgroundColor: "#abb6b8",
+            color: "#000000",
+            padding: "6px",
+            borderRadius: "50%",
+            fontSize: "25px",
+          }}
+
+        />
+      </label>
+    )}
+
+    <input
+      type="file"
+      id="upload-image"
+      accept="image/*"
+      onChange={handleImageUpload}
+      style={{ display: "none" }}
+    />
+  </Box>
+
+
               <Typography variant="h6" sx={{ mt: 2, fontWeight: "bold" }}>
-  {userData ? `${userData.first_name} ${userData.last_name}` : 'Guest User'}
+  {userData ? `${userData.full_name}` : 'Guest User'}
 </Typography>
 
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -315,6 +336,7 @@ console.log(user_id)
   Profile Information
 </Typography>
 <form onSubmit={handleProfileSubmit}>
+  
   <Grid container spacing={2}>
     <Grid item xs={12} md={6}>
       <TextField
