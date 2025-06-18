@@ -50,7 +50,7 @@ console.log(user_id)
     if (storedUserData) {
       setUserData(JSON.parse(storedUserData));
       if (JSON.parse(storedUserData).profile_picture) {
-        setImage(`${Media_Base_URL}${JSON.parse(storedUserData).profile_picture}`);
+        setImage(`${JSON.parse(storedUserData).profile_picture}`);
       }
     } else {
       fetchUserData();

@@ -1390,62 +1390,56 @@ def decode_uuid_and_get_test_id(request, uuid_str):
 class TestViewSet(viewsets.ModelViewSet):
     queryset = Test.objects.all()
     serializer_class = TestSerializer
-    permission_classes = [AllowAny]
 
-CATEGORY_MAPPING = {
-    "science": 1,
-    "math": 2,
-    "history": 3
-}
+    def get_serializer_context(self):
+        return {**super().get_serializer_context(), "request": self.request}
 
-def create(self, request):
-    """Create a new test"""
+    def create(self, request):
+        """Create a new test"""
+        print("Raw Request Data:", request.data)
 
-    print("Raw Request Data:", request.data)  # ✅ Debugging step
+        data = request.data
+        questions = data.get("questions", [])
 
-    data = request.data
+        for q in questions:
+            print("Received Question:", q)
 
-    # ✅ Ensure questions are correctly extracted
-    questions = data.get("questions", [])
-    for q in questions:
-        print("Received Question:", q)
-    if not isinstance(questions, list):
-        print("Error: 'questions' is not a list", questions)  # ✅ Debugging step
-        return Response({"error": "'questions' must be a list"}, status=400)
+        if not isinstance(questions, list):
+            print("Error: 'questions' is not a list", questions)
+            return Response({"error": "'questions' must be a list"}, status=400)
 
-    test = Test.objects.create(
-        title=data.get("title"),
-        description=data.get("description"),
-        category=data.get("category"),
-        max_score=data.get("max_score"),
-        subject=data.get("subject"),
-        difficulty=data.get("difficulty"),
-        owner=request.user,
-        time_limit=data.get("time_limit_per_question"),  # ✅ Fix key name
-        marks_per_question=data.get("marks_per_question"),
-        pass_criteria=data.get("pass_criteria"),
-        instructions=data.get("instructions"),
-        conclusion=data.get("conclusion"),
-        start_date=data.get("start_date"),
-        end_date=data.get("end_date"),
-        due_time=data.get("due_time"),
-        total_marks=data.get("total_marks"),
-        is_public=data.get("is_public", True),
-        allow_retakes=data.get("allow_retakes", False),
-    )
-
-    # ✅ Ensure questions are properly created
-    for q in questions:
-        Question.objects.create(
-            test=test,
-            text=q.get("text", ""),  # ✅ Use .get() to prevent KeyError
-            type=q.get("type", ""),
-            options=q.get("options", []),  # ✅ Default empty list if missing
-            correct_answer=q.get("correct_answer", [])
-           
+        test = Test.objects.create(
+            owner=request.user,
+            title=data.get("title"),
+            description=data.get("description"),
+            category=data.get("category"),
+            max_score=data.get("max_score"),
+            subject=data.get("subject"),
+            difficulty=data.get("difficulty"),
+            time_limit=data.get("time_limit_per_question"),
+            marks_per_question=data.get("marks_per_question"),
+            pass_criteria=data.get("pass_criteria"),
+            instructions=data.get("instructions"),
+            conclusion=data.get("conclusion"),
+            start_date=data.get("start_date"),
+            end_date=data.get("end_date"),
+            due_time=data.get("due_time"),
+            total_marks=data.get("total_marks"),
+            is_public=data.get("is_public", True),
+            allow_retakes=data.get("allow_retakes", False),
         )
 
-    return Response(TestSerializer(test).data, status=status.HTTP_201_CREATED)
+        for q in questions:
+            Question.objects.create(
+                test=test,
+                text=q.get("text", ""),
+                type=q.get("type", ""),
+                options=q.get("options", []),
+                correct_answer=q.get("correct_answer", [])
+            )
+
+        return Response(TestSerializer(test).data, status=status.HTTP_201_CREATED)
+
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse

@@ -247,25 +247,29 @@ class QuestionSerializer(serializers.ModelSerializer):
         # If test is provided, associate it; otherwise, leave test as None (for question bank)
         test = validated_data.get('test', None)  # test is optional
         question = Question.objects.create(test=test, **validated_data)
+        
         return question
 
 class TestSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True)  # ✅ Handle nested questions
     owner_name = serializers.CharField(source="owner.get_full_name", read_only=True)
+    questions = QuestionSerializer(many=True, required=False)  # ✅ Add this
 
     class Meta:
         model = Test
-        fields = "__all__"
-        read_only_fields = ['total_marks', 'total_time_limit', 'total_questions']  # ✅ Auto-calculated
+        fields = '__all__'
+        read_only_fields = ['owner']
 
     def create(self, validated_data):
+        request = self.context.get("request")
         questions_data = validated_data.pop('questions', [])
-        test = Test.objects.create(**validated_data)
+        print("Request user:", request.user)
+        print("Validated data:", validated_data)
+
+        test = Test.objects.create(owner=request.user, **validated_data)
 
         for question_data in questions_data:
             Question.objects.create(test=test, **question_data)
 
-        # ✅ Auto-update test fields
         test.total_questions = test.questions.count()
         test.total_marks = test.total_questions * float(test.marks_per_question)
         test.total_time_limit = test.total_questions * float(test.time_limit_per_question)

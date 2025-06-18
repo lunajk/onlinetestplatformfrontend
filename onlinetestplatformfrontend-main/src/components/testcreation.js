@@ -57,7 +57,7 @@ const CreateNewTest = () => {
         const [notificationEmails, setNotificationEmails] = useState('');
         const [subject, setSubject] = useState(""); // Assuming you have a way to select subjects
         const [difficulty, setDifficulty] = useState(""); // Assuming you have a way to select difficulty
-        const [owner] = useState(Number(localStorage.getItem("owner")) || 1); // Hardcoded owner name for testing
+        // Hardcoded owner name for testing
         const [testDescription, setTestDescription] = useState("");
         const [marksPerQuestion, setMarksPerQuestion] = useState(1); // Marks per question
         const [totalQuestions, setTotalQuestions] = useState(0); // Total questions
@@ -358,7 +358,7 @@ const handleSubmit = async () => {
             total_marks: totalQuestionsCount * marksPerQuestion,
             subject,
             difficulty,
-            owner,
+          
             time_limit_per_question: timeLimitPerQuestion,
             total_time_limit: totalTimeLimit / 60,
             marks_per_question: marksPerQuestion,
@@ -416,6 +416,7 @@ const handleSubmit = async () => {
         };
 
         // Step 1: Create the test
+        console.log("Sending testData:", JSON.stringify(testData, null, 2));
         const response = await axios.post(
             `${API_BASE_URL}/tests/`,
             testData,
