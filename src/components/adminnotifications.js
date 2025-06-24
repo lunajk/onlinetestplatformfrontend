@@ -4,7 +4,7 @@ import { List, ListItem, Typography } from '@mui/material';
 const API_BASE_URL = 'https://onlinetestcreationbackend.onrender.com/api';
 const AdminNotifications = () => {
     const [notifications, setNotifications] = useState([]);
-
+    print("hello")
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
