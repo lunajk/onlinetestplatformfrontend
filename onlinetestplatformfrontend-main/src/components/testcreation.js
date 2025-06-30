@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { RadioGroup, Radio, } from "@mui/material";
+
 import {  Typography, Stepper,CardContent,Card,Fade,Alert,Input,Stack,Switch, Step,StepLabel, Button, TextField, Checkbox, FormControlLabel, Paper, Box, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, IconButton, Drawer, Toolbar, List, ListItem, ListItemText, AppBar, Tooltip } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Form, useNavigate } from "react-router-dom";
@@ -18,6 +20,7 @@ const BASE_URL = "http://localhost:3000/smartbridge/online-test-assessment"; // 
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 const CreateNewTest = () => {
         const [option, setOption] = useState(null);
+        const [accessType, setAccessType] = useState("protected");
         const [file, setFile] = useState(null);
         const [allowRetakes, setAllowRetakes] = useState(false); // Default: false
         const [numberOfRetakes, setNumberOfRetakes] = useState(0); // Default: 0
@@ -57,6 +60,8 @@ const CreateNewTest = () => {
         const [notificationEmails, setNotificationEmails] = useState('');
         const [subject, setSubject] = useState(""); // Assuming you have a way to select subjects
         const [difficulty, setDifficulty] = useState(""); // Assuming you have a way to select difficulty
+        const [publishType, setPublishType] = useState("");
+        const [publishDialogOpen, setPublishDialogOpen] = useState(false);
         // Hardcoded owner name for testing
         const [testDescription, setTestDescription] = useState("");
         const [marksPerQuestion, setMarksPerQuestion] = useState(1); // Marks per question
@@ -128,31 +133,30 @@ const CreateNewTest = () => {
     setQuestions(updatedQuestions);
 };
   const handleNext = async () => {
-    // Check if all required fields are filled in case 0
-    if (activeStep === 0) {
-      if (!testName || !testDescription || !category || !subject || !difficulty) {
-        alert("Please fill in all fields before proceeding.");
-        return;
-      }
-    }
+  // Step 0: Validate required fields
+        if (activeStep === 0) {
+          if (!testName || !testDescription || !category || !subject || !difficulty) {
+            alert("Please fill in all fields before proceeding.");
+            return;
+          }
+        }
 
-    // Check if there are questions before moving to the next step
-    if (activeStep === 1) {
-      if (questions.length === 0) {
-        alert("Please create at least one question before proceeding.");
-        return;
-      }
-    }
+        // Step 1: Ensure at least one question is added
+        if (activeStep === 1) {
+          if (questions.length === 0) {
+            alert("Please create at least one question before proceeding.");
+            return;
+          }
+        }
 
-    // Proceed to the next step
-    if (activeStep === steps.length - 1) {
-      setLoading(true);
-      await handleSubmit();
-      setOpenSuccessDialog(true);
-    } else {
-      setActiveStep((prevStep) => prevStep + 1);
-    }
-  };
+        // Final Step: Open access type selection modal
+        if (activeStep === steps.length - 1) {
+          setPublishDialogOpen(true); // ✅ Opens the protected/unprotected dialog
+        } else {
+          setActiveStep((prevStep) => prevStep + 1);
+        }
+      };
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     alert("Test link copied!");
@@ -348,7 +352,8 @@ const handleSubmit = async () => {
 
     try {
         const totalQuestionsCount = questions.length + selectedQuestions.length;
-        const totalTimeLimit = totalQuestionsCount * timeLimitPerQuestion;
+        const totalTimeLimit = totalQuestionsCount * Number(timeLimitPerQuestion);
+
 
         const testData = {
             title: testName,
@@ -358,9 +363,9 @@ const handleSubmit = async () => {
             total_marks: totalQuestionsCount * marksPerQuestion,
             subject,
             difficulty,
-          
-            time_limit_per_question: timeLimitPerQuestion,
-            total_time_limit: totalTimeLimit / 60,
+            access_type: accessType,
+            time_limit_per_question: Number(timeLimitPerQuestion),
+            total_time_limit: totalTimeLimit,
             marks_per_question: marksPerQuestion,
             pass_criteria: passCriteria,
             instructions,
@@ -369,23 +374,17 @@ const handleSubmit = async () => {
             is_public: IsPublic,
             allow_retakes: allowRetakes,
             number_of_retakes: numberOfRetakes,
-            randomize_order: false,
-            allow_blank_answers: false,
-            penalize_incorrect_answers: false,
-            allow_jump_around: false,
-            only_move_forward: false,
-            indicate_correctness: false,
-            display_correct_answer: false,
-            show_explanation: false,
-            move_on_without_feedback: false,
-            show_score: false,
-            show_test_outline: false,
-            disable_right_click: false,
-            disable_copy_paste: false,
-            disable_translate: false,
-            disable_autocomplete: false,
-            disable_spellcheck: false,
-            disable_printing: false,
+            randomize_order: randomizeOrder,
+            allow_blank_answers: allowBlankAnswers,
+            penalize_incorrect_answers: penalizeIncorrectAnswers,
+            allow_jump_around: allowJumpAround,
+            only_move_forward: onlyMoveForward,
+            disable_right_click: disableRightClick,
+            disable_copy_paste: disableCopyPaste,
+            disable_translate: disableTranslate,
+            disable_autocomplete: disableAutocomplete,
+            disable_spellcheck: disableSpellcheck,
+            disable_printing: disablePrinting,
             receive_email_notifications: receiveEmailNotifications,
             notification_emails: notificationEmails,
             start_date: startDate || null,
@@ -452,7 +451,8 @@ const handleSubmit = async () => {
         setFile(null); // Clear file
         setOpenSuccessDialog(true);
     } catch (error) {
-        console.error("Error creating test or uploading questions:", error);
+        console.error("Full error:", error.response?.data);
+
         setError(error.response?.data?.error || "Something went wrong.");
     } finally {
         setLoading(false);
@@ -564,582 +564,390 @@ const handleSubmit = async () => {
           </Box>
         );
         case 1:
-            return (
-                <Box sx={{
-                    mt: 4,
-                    maxWidth: 800,
-                    mx: "auto",
-                    p: 3,
-                    backgroundColor: "#fff",
-                    borderRadius: 4,
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-                    transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                    "&:hover": {
-                        transform: "translateY(-5px)",
-                        boxShadow: "0 12px 24px rgba(0,0,0,0.2)"
-                    }
-                }}>
-                    <Typography variant="h4" sx={{
-                        mb: 3,
-                        textAlign: "center",
-                        fontWeight: "bold",
-                        color: "#333",
-                        background: "linear-gradient(45deg, #00796b, #004d40)",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent"
-                    }}>
-                        Create Questions
-                    </Typography>
-                    <form onSubmit={saveQuestions}> {/* Change here */}
-                        {questions.map((question, qIndex) => (
-                            <div key={qIndex} className="question-group" sx={{
-                                mb: 3,
-                                backgroundColor: "#f9f9f9",
-                                padding: 3,
-                                borderRadius: 2,
-                                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                                transition: "all 0.3s ease",
-                                "&:hover": {
-                                    boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
-                                    transform: "scale(1.02)"
-                                }
-                            }}>
-                         <div
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            marginBottom: "0",
-                            gap: "10px"
-                        }}
-                        >
-                        <div
-                            style={{
-                            fontWeight: "bold",
-                            color: "#00796b",
-                            fontSize: "16px",
-                            paddingTop: "12px"
-                            }}
-                        >
-                            {qIndex + 1}.
-                        </div>
+  return (
+    <Box
+      sx={{
+        mt: 4,
+        maxWidth: 900,
+        mx: "auto",
+        p: 3,
+        backgroundColor: "#fff",
+        borderRadius: 4,
+        boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+      }}
+    >
+      <Typography variant="h4" sx={{
+        mb: 3,
+        textAlign: "center",
+        fontWeight: "bold",
+        color: "#333",
+        background: "linear-gradient(45deg, #00796b, #004d40)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent"
+      }}>
+        How would you like to add questions?
+      </Typography>
 
-                        <textarea
-                            value={question.text}
-                            onChange={(e) => handleQuestionTextChange(qIndex, e.target.value)}
-                            placeholder={`Enter question ${qIndex + 1} here`}
-                            required
-                            rows="2"
-                            style={{
-                            width: "100%",
-                            padding: "12px",
-                            fontSize: "16px",
-                            borderRadius: "8px",
-                            border: "1px solid #ddd",
-                            backgroundColor: "#fafafa",
-                            resize: "vertical",
-                            transition: "border-color 0.3s, box-shadow 0.3s"
-                            }}
-                            onFocus={(e) => (e.target.style.borderColor = "#00796b")}
-                            onBlur={(e) => (e.target.style.borderColor = "#ddd")}
-                        />
-                        </div>
+      {/* Selection Buttons */}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4 }} justifyContent="center">
+        <Button
+          variant={option === 'manual' ? 'contained' : 'outlined'}
+          onClick={() => setOption('manual')}
+          sx={{ borderRadius: 2, textTransform: 'none', px: 4 }}
+        >
+          Create Manually
+        </Button>
+        <Button
+          variant={option === 'import' ? 'contained' : 'outlined'}
+          onClick={() => { setOption('import'); setUploadType(''); }}
+          sx={{ borderRadius: 2, textTransform: 'none', px: 4 }}
+        >
+          Import Questions
+        </Button>
+        <Button
+          variant={option === 'bank' ? 'contained' : 'outlined'}
+          onClick={() => setOption('bank')}
+          sx={{ borderRadius: 2, textTransform: 'none', px: 4 }}
+        >
+          Select from Question Bank
+        </Button>
+      </Stack>
 
-                                {question.type === "multiplechoice" && (
-    <>
-        {question.options.map((option, optionIndex) => (
-            <div key={optionIndex} className="option-group" sx={{
-                mb: 2,
-                padding: 2,
-                backgroundColor: "#fff",
-                borderRadius: 1,
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                    boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
-                }
-            }}>
-                <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
-                    <input
+      {/* Manual Creation Section */}
+      {option === 'manual' && (
+        <form onSubmit={saveQuestions}>
+          {questions.map((question, qIndex) => (
+            <div key={qIndex} className="question-group" style={{ marginBottom: "20px" }}>
+              <Typography variant="h6">Question {qIndex + 1}</Typography>
+              <textarea
+                value={question.text}
+                onChange={(e) => handleQuestionTextChange(qIndex, e.target.value)}
+                placeholder={`Enter question ${qIndex + 1} here`}
+                required
+                rows="2"
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  fontSize: "16px",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                  backgroundColor: "#fafafa",
+                  marginBottom: "12px"
+                }}
+              />
+
+              {question.type === "multiplechoice" && (
+                <>
+                  {question.options.map((option, optionIndex) => (
+                    <div key={optionIndex} style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
+                      <input
                         type="radio"
                         name={`correct_answer-${qIndex}`}
                         checked={question.correctAnswer === optionIndex}
                         onChange={() => handleCorrectAnswerChange(qIndex, optionIndex)}
-                        style={{
-                            marginRight: "12px",
-                            transform: "scale(1.2)",
-                            transition: "transform 0.2s",
-                            cursor: "pointer"
-                        }}
-                        onMouseOver={(e) => (e.target.style.transform = "scale(1.3)")}
-                        onMouseOut={(e) => (e.target.style.transform = "scale(1.2)")}
-                    />
-                    <input
+                      />
+                      <input
                         type="text"
-                        value={option || ""}
+                        value={option}
                         onChange={(e) => handleOptionChange(qIndex, optionIndex, e.target.value)}
                         placeholder={`Option ${optionIndex + 1}`}
-                        required
-                        style={{
-                            padding: "10px",
-                            width: "80%",
-                            fontSize: "14px",
-                            marginLeft: "12px",
-                            borderRadius: "8px",
-                            border: "1px solid #ccc",
-                            backgroundColor: "#fafafa",
-                            transition: "border 0.3s, box-shadow 0.3s",
-                        }}
-                        onFocus={(e) => (e.target.style.borderColor = "#00796b")}
-                        onBlur={(e) => (e.target.style.borderColor = "#ccc")}
-                    />
-                </label>
-            </div>
-        ))}
+                        style={{ marginLeft: "10px", width: "70%" }}
+                      />
+                    </div>
+                  ))}
+                  <input
+                    type="text"
+                    value={newOption}
+                    placeholder="Add another option"
+                    onChange={(e) => setNewOption(e.target.value)}
+                  />
+                  <Button onClick={() => handleAddOption(qIndex)}>Add</Button>
+                </>
+              )}
 
-<div className="add-option-group" style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-            <input
-                type="text"
-                className="custom-input"
-                value={newOption}
-                placeholder="Add another option"
-                onChange={(e) => setNewOption(e.target.value)}
-                style={{
-                    fontSize: "14px",
-                    padding: "6px 12px",
-                    border: "1px solid #ccc",
-                    borderRadius: "20px",
-                    cursor: "pointer",
-                    width: "100%",
-                    maxWidth: "200px",
-                }}
-            />
-            <Button onClick={() => handleAddOption(qIndex)}>Add</Button>
-            <IconButton
-                onClick={() => handleRemoveQuestion(qIndex)}
-                sx={{
-                    color: "#d32f2f",
-                    "&:hover": {
-                        backgroundColor: "#f8d7da",
-                    },
-                    borderRadius: "50%",
-                    padding: "8px",
-                }}
-                title="Remove question"
-            >
-                <DeleteIcon />
-            </IconButton>
-        </div>
-
-        {/* Correct Answer Input */}
-        <div style={{ marginTop: "16px" }}>
-            <label style={{ fontSize: "14px", fontWeight: "bold" }}>Correct Answer:</label>
-            <input
-                type="text"
-                value={question.options[question.correctAnswer] || ""}
-                onChange={(e) => {
-                    const selectedOption = e.target.value;
-                    const selectedIndex = question.options.indexOf(selectedOption);
-                    handleCorrectAnswerChange(qIndex, selectedIndex);
-                }}
-                placeholder="Type the correct answer here"
-                style={{
-                    padding: "10px",
-                    width: "100%",
-                    fontSize: "14px",
-                    borderRadius: "8px",
-                    border: "1px solid #ccc",
-                    backgroundColor: "#fafafa",
-                    transition: "border 0.3s, box-shadow 0.3s",
-                    marginTop: "8px"
-                }}
-            />
-        </div>
-    </>
-)}
-
-{question.type === "multipleresponse" && (
-    <>
-        {question.options.map((option, optionIndex) => (
-            <div key={optionIndex} className="form-group" sx={{ mb: 2 }}>
-                <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
-                    <input
-                        type="checkbox"
-                        checked={question.correctAnswers.includes(option)}
-                        onChange={() => handleCorrectAnswersChange(qIndex, optionIndex)}
-                        style={{ marginRight: "12px", transform: "scale(1.2)" }}
-                    />
-                    <input
-                        type="text"
-                        value={option || ""}
-                        onChange={(e) => handleOptionChange(qIndex, optionIndex, e.target.value)}
-                        placeholder={`Option ${optionIndex + 1}`}
-                        style={{ fontSize: "14px", padding: "6px", width: "100%", maxWidth: "300px" }}
-                        required
-                    />
-                </label>
-            </div>
-        ))}
-
-        <div className="add-option-group" style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-            <input
-                type="text"
-                className="custom-input"
-                value={newOption}
-                placeholder="Add another option"
-                onChange={(e) => setNewOption(e.target.value)}
-                style={{
-                    fontSize: "14px",
-                    padding: "6px 12px",
-                    border: "1px solid #ccc",
-                    borderRadius: "20px",
-                    cursor: "pointer",
-                    width: "100%",
-                    maxWidth: "200px",
-                }}
-            />
-            <Button onClick={() => handleAddOption(qIndex)}>Add</Button>
-            <IconButton
-                onClick={() => handleRemoveQuestion(qIndex)}
-                sx={{
-                    color: "#d32f2f",
-                    "&:hover": {
-                        backgroundColor: "#f8d7da",
-                    },
-                    borderRadius: "50%",
-                    padding: "8px",
-                }}
-                title="Remove question"
-            >
-                <DeleteIcon />
-            </IconButton>
-        </div>
-
-     {/* Correct Answer Input */}
-<div style={{ marginTop: "16px" }}>
-    <label style={{ fontSize: "14px", fontWeight: "bold" }}>Correct Answers:</label>
-    <input
-        type="text"
-        value={question.correctAnswers.join(", ")} // Display selected correct answers directly
-        onChange={(e) => {
-            const answers = e.target.value.split(",").map(item => item.trim());
-            const correctAnswerIndices = answers.map(answer => question.options.indexOf(answer)).filter(index => index !== -1);
-            handleCorrectAnswersChange(qIndex, correctAnswerIndices); // Update correct answers based on input
-        }}
-        placeholder="Type the correct answers here (comma separated)"
-        style={{
-            padding: "10px",
-            width: "100%",
-            fontSize: "14px",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
-            backgroundColor: "#fafafa",
-            transition: "border 0.3s, box-shadow 0.3s",
-            marginTop: "8px"
-        }}
-    />
-</div>
-    </>
-)}
-
-{question.type === "truefalse" && (
-    <>
-        <div className="form-group" sx={{ mb: 2 }}>
-            <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
-                <input
-                    type="radio"
-                    name={`correct_answer-${qIndex}`}
-                    value={true}
-                    checked={question.correctAnswer === true}
-                    onChange={() => handleCorrectAnswerChange(qIndex, true)}
-                    style={{ marginRight: "12px", transform: "scale(1.2)" }}
-                />
-                True
-            </label>
-            <br />
-            <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
-                <input
-                    type="radio"
-                    name={`correct_answer-${qIndex}`}
-                    value={false}
-                    checked={question.correctAnswer === false}
-                    onChange={() => handleCorrectAnswerChange(qIndex, false)}
-                    style={{ marginRight: "12px", transform: "scale(1.2)" }}
-                />
-                False
-            </label>
-        </div>
-
-        {/* Correct Answer Input */}
-        <div style={{ marginTop: "16px" }}>
-            <label style={{ fontSize: "14px", fontWeight: "bold" }}>Correct Answer:</label>
-            <input
-                type="text"
-                value={question.correctAnswer ? "True" : "False"}
-                onChange={(e) => {
-                    const value = e.target.value.trim().toLowerCase();
-                    handleCorrectAnswerChange(qIndex, value === "true");
-                }}
-                placeholder="Type the correct answer here (True/False)"
-                style={{
-                    padding: "10px",
-                    width: "100%",
-                    fontSize: "14px",
-                    borderRadius: "8px",
-                    border: "1px solid #ccc",
-                    backgroundColor: "#fafafa",
-                    transition: "border 0.3s, box-shadow 0.3s",
-                    marginTop: "8px"
-                }}
-            />
-        </div>
-
-        <div className="add-option-group">
-            <br />
-            <IconButton
-                onClick={() => handleRemoveQuestion(qIndex)}
-                sx={{
-                    color: "#d32f2f",
-                    "&:hover": {
-                        backgroundColor: "#f8d7da",
-                    },
-                    borderRadius: "50%",
-                    padding: "8px",
-                }}
-                title="Remove question"
-            >
-                <DeleteIcon />
-            </IconButton>
-        </div>
-    </>
-)}
-
-{question.type === "fillintheblank" && (
-    <>
-        <input
-            type="text"
-            value={question.correctAnswer}
-            onChange={(e) => handleFillInTheBlankAnswerChange(qIndex, e.target.value)}
-            placeholder="Type your answer"
-            required
-            className="input-field"
-            style={{
-                padding: "12px",
-                width: "100%",
-                fontSize: "16px",
-                borderRadius: "8px",
-                marginTop: "8px",
-                marginBottom: "0",
-                border: "1px solid #ccc",
-                backgroundColor: "#fafafa",
-                transition: "border-color 0.3s",
-            }}
-            onFocus={(e) => (e.target.style.borderColor = "#00796b")}
-            onBlur={(e) => (e.target.style.borderColor = "#ccc")}
-        />
-        <div className="add-option-group">
-            <IconButton
-                onClick={() => handleRemoveQuestion(qIndex)}
-                sx={{
-                    color: "#d32f2f",
-                    "&:hover": {
-                        backgroundColor: "#f8d7da",
-                    },
-                    borderRadius: "50%",
-                    padding: "8px",
-                }}
-                title="Remove question"
-            >
-                <DeleteIcon />
-            </IconButton>
-        </div>
-    </>
-)}
-                            </div>
-                        ))}
-                        <Box sx={{ display: "flex", justifyContent: "space-around", mt: 3 }}>
-                            <Button variant="contained" sx={{
-                                backgroundColor: "#00796b",
-                                "&:hover": {
-                                    backgroundColor: "#004d40",
-                                    transform: "scale(1.05)"
-                                },
-                                transition: "all 0.3s ease"
-                            }} onClick={addMultipleChoiceQuestion}>
-                                Multiple Choice
-                            </Button>
-                            <Button variant="contained" sx={{
-                                backgroundColor: "#00796b",
-                                "&:hover": {
-                                    backgroundColor: "#004d40",
-                                    transform: "scale(1.05)"
-                                },
-                                transition: "all 0.3s ease"
-                            }} onClick={addTrueFalseQuestion}>
-                                True/False
-                            </Button>
-                            <Button variant="contained" sx={{
-                                backgroundColor: "#00796b",
-                                "&:hover": {
-                                    backgroundColor: "#004d40",
-                                    transform: "scale(1.05)"
-                                },
-                                transition: "all 0.3s ease"
-                            }} onClick={addMultipleResponseQuestion}>
-                                Multiple Response
-                            </Button>
-                            <Button variant="contained" sx={{
-                                backgroundColor: "#00796b",
-                                "&:hover": {
-                                    backgroundColor: "#004d40",
-                                    transform: "scale(1.05)"
-                                },
-                                transition: "all 0.3s ease"
-                            }} onClick={addFillInTheBlankQuestion}>
-                                Fill-in-Blanks
-                            </Button>
-                         
-                        </Box>
-                        </form>
-                </Box>
-             
-            );
-            case 2:
-            return (
-             
-                <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  p: 4,
-                }}
-              >
-                <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-                  Select How You Want to Add Questions
-                </Typography>
-         
-                {/* Selection Buttons */}
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4 }}>
-                  <Button
-                    variant={option === 'import' ? 'contained' : 'outlined'}
-                    onClick={() => { setOption('import'); setUploadType(''); }}
-                    sx={{ borderRadius: 2, textTransform: 'none', px: 4 }}
-                  >
-                    Import Questions
-                  </Button>
-                  <Button
-                    variant={option === 'bank' ? 'contained' : 'outlined'}
-                    onClick={() => setOption('bank')}
-                    sx={{ borderRadius: 2, textTransform: 'none', px: 4 }}
-                  >
-                    Select from Question Bank
-                  </Button>
-                </Stack>
-         
-                {/* Case 1: Import Questions */}
-                <Fade in={option === 'import'}>
-                  <Box sx={{ display: option === 'import' ? 'block' : 'none' }}>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
-                      Import Questions
-                    </Typography>
-         
-                    <Stack direction="row" spacing={2} sx={{ mb: 2 }} justifyContent="center">
-                      <Button
-                        variant={uploadType === 'modal' ? 'contained' : 'outlined'}
-                        onClick={() => setUploadType('modal')}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        Import from Test
-                      </Button>
-                      <Button
-                        variant={uploadType === 'file' ? 'contained' : 'outlined'}
-                        onClick={() => setUploadType('file')}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        Upload CSV / PDF
-                      </Button>
-                    </Stack>
-         
-                    {/* Modal Option */}
-                    {uploadType === 'modal' && (
-                      <>
-                        <Typography variant="body1" sx={{ mb: 1 }}>
-                          Open import modal to select questions from an existing test
-                        </Typography>
-                        <Button
-                          variant="outlined"
-                          onClick={() => setModalOpen(true)}
-                          sx={{ borderRadius: 2, textTransform: 'none' }}
-                        >
-                          Open Import Modal
-                        </Button>
-         
-                        <ImportQuestionsModal
-                          open={modalOpen}
-                          onClose={() => setModalOpen(false)}
-                          setSelectedImportTest={() => {}}
+              {question.type === "multipleresponse" && (
+                <>
+                  {question.options.map((option, optionIndex) => (
+                    <div key={optionIndex}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={question.correctAnswers.includes(option)}
+                          onChange={() => handleCorrectAnswersChange(qIndex, optionIndex)}
                         />
-                      </>
-                    )}
-         
-                    {/* File Upload Option */}
+                        <input
+                          type="text"
+                          value={option}
+                          onChange={(e) => handleOptionChange(qIndex, optionIndex, e.target.value)}
+                          placeholder={`Option ${optionIndex + 1}`}
+                          style={{ marginLeft: "10px", width: "70%" }}
+                        />
+                      </label>
+                    </div>
+                  ))}
+                  <input
+                    type="text"
+                    value={newOption}
+                    placeholder="Add another option"
+                    onChange={(e) => setNewOption(e.target.value)}
+                  />
+                  <Button onClick={() => handleAddOption(qIndex)}>Add</Button>
+                </>
+              )}
+
+              {question.type === "truefalse" && (
+                <>
+                  <label><input type="radio" checked={question.correctAnswer === true} onChange={() => handleCorrectAnswerChange(qIndex, true)} /> True</label><br />
+                  <label><input type="radio" checked={question.correctAnswer === false} onChange={() => handleCorrectAnswerChange(qIndex, false)} /> False</label>
+                </>
+              )}
+
+              {question.type === "fillintheblank" && (
+                <input
+                  type="text"
+                  value={question.correctAnswer}
+                  onChange={(e) => handleFillInTheBlankAnswerChange(qIndex, e.target.value)}
+                  placeholder="Correct answer"
+                  style={{ width: "100%", padding: "10px", marginTop: "10px" }}
+                />
+              )}
+
+              <IconButton onClick={() => handleRemoveQuestion(qIndex)} color="error" title="Remove Question">
+                <DeleteIcon />
+              </IconButton>
+            </div>
+          ))}
+
+          {/* Buttons to add question types */}
+          <Box sx={{ display: "flex", justifyContent: "space-around", mt: 3 }}>
+            <Button onClick={addMultipleChoiceQuestion}>Multiple Choice</Button>
+            <Button onClick={addTrueFalseQuestion}>True/False</Button>
+            <Button onClick={addMultipleResponseQuestion}>Multiple Response</Button>
+            <Button onClick={addFillInTheBlankQuestion}>Fill in the Blank</Button>
+          </Box>
+
+          <Box sx={{ mt: 3, textAlign: "center" }}>
+            <Button variant="contained" type="submit">Save Questions</Button>
+          </Box>
+        </form>
+      )}
+
+      {/* Import Section */}
+      {option === 'import' && (
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Import Questions
+          </Typography>
+          <Stack direction="row" spacing={2} sx={{ mb: 2 }} justifyContent="center">
+            <Button
+              variant={uploadType === 'modal' ? 'contained' : 'outlined'}
+              onClick={() => setUploadType('modal')}
+            >
+              Import from Test
+            </Button>
+            <Button
+              variant={uploadType === 'file' ? 'contained' : 'outlined'}
+              onClick={() => setUploadType('file')}
+            >
+              Upload CSV / PDF
+            </Button>
+          </Stack>
+
+          {uploadType === 'modal' && (
+            <>
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                Select questions from existing test
+              </Typography>
+              <Button onClick={() => setModalOpen(true)}>
+                Open Import Modal
+              </Button>
+              <ImportQuestionsModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                setSelectedImportTest={() => { }}
+              />
+            </>
+          )}
+
+          {uploadType === 'file' && (
+            <Box sx={{ mt: 3, maxWidth: 400, mx: 'auto' }}>
+              <Input
+                type="file"
+                onChange={handleFileChange}
+                fullWidth
+                sx={{ mb: 2 }}
+              />
+              <Typography variant="body2" color="textSecondary">
+                This file will be uploaded after test creation.
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Question Bank Section */}
+      {option === 'bank' && (
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Select Questions from Question Bank
+          </Typography>
+          {fetchedQuestions.map((question, index) => (
+            <Card key={index} sx={{ mb: 2 }}>
+              <CardContent>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={selectedQuestions.some(q => q.id === question.id)}
+                      onChange={() => handleQuestionSelect(question)}
+                    />
+                  }
+                  label={question.text}
+                />
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+
+  //           case 2:
+  //           return (
              
-                    {uploadType === 'file' && (
-  <Box sx={{ mt: 3, maxWidth: 400, mx: 'auto' }}>
-    <Input
-      type="file"
-      onChange={handleFileChange}
-      fullWidth
-      sx={{ mb: 2 }}
-    />
-    <Typography variant="body2" color="textSecondary">
-      The selected file will be uploaded automatically after test creation.
-    </Typography>
-  </Box>
-                    )}
-                  </Box>
-                </Fade>
+  //               <Box
+  //               sx={{
+  //                 display: 'flex',
+  //                 flexDirection: 'column',
+  //                 alignItems: 'center',
+  //                 textAlign: 'center',
+  //                 p: 4,
+  //               }}
+  //             >
+  //               <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+  //                 Select How You Want to Add Questions
+  //               </Typography>
          
-                {/* Case 2: Question Bank */}
-                <Fade in={option === 'bank'}>
-                  <Box sx={{ display: option === 'bank' ? 'block' : 'none' }}>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
-                      SELECT QUESTIONS FROM QUESTION BANK
-                    </Typography>
+  //               {/* Selection Buttons */}
+  //               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4 }}>
+  //                 <Button
+  //                   variant={option === 'import' ? 'contained' : 'outlined'}
+  //                   onClick={() => { setOption('import'); setUploadType(''); }}
+  //                   sx={{ borderRadius: 2, textTransform: 'none', px: 4 }}
+  //                 >
+  //                   Import Questions
+  //                 </Button>
+  //                 <Button
+  //                   variant={option === 'bank' ? 'contained' : 'outlined'}
+  //                   onClick={() => setOption('bank')}
+  //                   sx={{ borderRadius: 2, textTransform: 'none', px: 4 }}
+  //                 >
+  //                   Select from Question Bank
+  //                 </Button>
+  //               </Stack>
          
-                    {fetchedQuestions.map((question, index) => (
-                      <Card
-                        key={index}
-                        sx={{
-                          mb: 2,
-                          borderRadius: 2,
-                          boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
-                          transition: 'transform 0.2s',
-                          '&:hover': { transform: 'scale(1.01)' },
-                        }}
-                      >
-                        <CardContent>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={selectedQuestions.some(q => q.id === question.id)}
-                                onChange={() => handleQuestionSelect(question)}
-                              />
-                            }
-                            label={
-                              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                {question.text}
-                              </Typography>
-                            }
-                          />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </Box>
-                </Fade>
-              </Box>
-            );
+  //               {/* Case 1: Import Questions */}
+  //               <Fade in={option === 'import'}>
+  //                 <Box sx={{ display: option === 'import' ? 'block' : 'none' }}>
+  //                   <Typography variant="h6" sx={{ mb: 2 }}>
+  //                     Import Questions
+  //                   </Typography>
+         
+  //                   <Stack direction="row" spacing={2} sx={{ mb: 2 }} justifyContent="center">
+  //                     <Button
+  //                       variant={uploadType === 'modal' ? 'contained' : 'outlined'}
+  //                       onClick={() => setUploadType('modal')}
+  //                       sx={{ borderRadius: 2 }}
+  //                     >
+  //                       Import from Test
+  //                     </Button>
+  //                     <Button
+  //                       variant={uploadType === 'file' ? 'contained' : 'outlined'}
+  //                       onClick={() => setUploadType('file')}
+  //                       sx={{ borderRadius: 2 }}
+  //                     >
+  //                       Upload CSV / PDF
+  //                     </Button>
+  //                   </Stack>
+         
+  //                   {/* Modal Option */}
+  //                   {uploadType === 'modal' && (
+  //                     <>
+  //                       <Typography variant="body1" sx={{ mb: 1 }}>
+  //                         Open import modal to select questions from an existing test
+  //                       </Typography>
+  //                       <Button
+  //                         variant="outlined"
+  //                         onClick={() => setModalOpen(true)}
+  //                         sx={{ borderRadius: 2, textTransform: 'none' }}
+  //                       >
+  //                         Open Import Modal
+  //                       </Button>
+         
+  //                       <ImportQuestionsModal
+  //                         open={modalOpen}
+  //                         onClose={() => setModalOpen(false)}
+  //                         setSelectedImportTest={() => {}}
+  //                       />
+  //                     </>
+  //                   )}
+         
+  //                   {/* File Upload Option */}
+             
+  //                   {uploadType === 'file' && (
+  // <Box sx={{ mt: 3, maxWidth: 400, mx: 'auto' }}>
+  //   <Input
+  //     type="file"
+  //     onChange={handleFileChange}
+  //     fullWidth
+  //     sx={{ mb: 2 }}
+  //   />
+  //   <Typography variant="body2" color="textSecondary">
+  //     The selected file will be uploaded automatically after test creation.
+  //   </Typography>
+  // </Box>
+  //                   )}
+  //                 </Box>
+  //               </Fade>
+         
+  //               {/* Case 2: Question Bank */}
+  //               <Fade in={option === 'bank'}>
+  //                 <Box sx={{ display: option === 'bank' ? 'block' : 'none' }}>
+  //                   <Typography variant="h6" sx={{ mb: 2 }}>
+  //                     SELECT QUESTIONS FROM QUESTION BANK
+  //                   </Typography>
+         
+  //                   {fetchedQuestions.map((question, index) => (
+  //                     <Card
+  //                       key={index}
+  //                       sx={{
+  //                         mb: 2,
+  //                         borderRadius: 2,
+  //                         boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+  //                         transition: 'transform 0.2s',
+  //                         '&:hover': { transform: 'scale(1.01)' },
+  //                       }}
+  //                     >
+  //                       <CardContent>
+  //                         <FormControlLabel
+  //                           control={
+  //                             <Checkbox
+  //                               checked={selectedQuestions.some(q => q.id === question.id)}
+  //                               onChange={() => handleQuestionSelect(question)}
+  //                             />
+  //                           }
+  //                           label={
+  //                             <Typography variant="body1" sx={{ fontWeight: 500 }}>
+  //                               {question.text}
+  //                             </Typography>
+  //                           }
+  //                         />
+  //                       </CardContent>
+  //                     </Card>
+  //                   ))}
+  //                 </Box>
+  //               </Fade>
+  //             </Box>
+  //           );
             case 3:
               
                 return (
@@ -1150,7 +958,7 @@ const handleSubmit = async () => {
                             type="number"
                             fullWidth
                             value={timeLimitPerQuestion}
-                            onChange={(e) => setTimeLimitPerQuestion(e.target.value)}
+                            onChange={(e) => setTimeLimitPerQuestion(Number(e.target.value))}
                             sx={{ mb: 2 }}
                         />
                         <TextField
@@ -1159,11 +967,13 @@ const handleSubmit = async () => {
                             fullWidth
                             value={marksPerQuestion}
                             onChange={(e) => {
-                                setMarksPerQuestion(e.target.value);
-                                setTotalMarks(e.target.value);
+                              const value = Number(e.target.value);
+                              setMarksPerQuestion(value);
+                              setTotalMarks(value);
                             }}
                             sx={{ mb: 2 }}
-                        />
+                          />
+
                         <Typography variant="body1" sx={{ mb: 2 }}>
                             Total Questions: {totalQuestionsCount}
                         </Typography>
@@ -1507,17 +1317,24 @@ const handleSubmit = async () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={handleNext}
-            disabled={
-                (activeStep === 0 && (!testName || !testDescription || !subject || !difficulty)) ||
-                (activeStep === 1 && questions.length === 0) || // Disable if no questions are created
-                (activeStep === 3 && (!timeLimitPerQuestion || !marksPerQuestion)) || // Disable if time limit per question or marks per question are not set
-                (activeStep === 4 && !passCriteria) || // Disable if passing criteria is not set
-                (activeStep === 5 && (!instructions || !conclusion)) // Disable if instructions or conclusion are not set
+            onClick={() => {
+              if (activeStep === steps.length - 1) {
+                setPublishDialogOpen(true); // 👈 This opens your Protected/Unprotected dialog
+              } else {
+                handleNext(); // 👈 Normal stepper flow
               }
+            }}
+            disabled={
+              (activeStep === 0 && (!testName || !testDescription || !subject || !difficulty)) ||
+              (activeStep === 1 && questions.length === 0) ||
+              (activeStep === 3 && (!timeLimitPerQuestion || !marksPerQuestion)) ||
+              (activeStep === 4 && !passCriteria) ||
+              (activeStep === 5 && (!instructions || !conclusion))
+            }
           >
             {activeStep === steps.length - 1 ? "Publish" : "Next"}
           </Button>
+
         </Box>
         <Dialog open={openSuccessDialog} onClose={() => setOpenSuccessDialog(false)}>
         <DialogTitle>Test Published Successfully!</DialogTitle>
@@ -1575,6 +1392,39 @@ const handleSubmit = async () => {
             <CircularProgress />
           </Box>
         )}
+        <Dialog open={publishDialogOpen} onClose={() => setPublishDialogOpen(false)}>
+            <DialogTitle>Select Access Type</DialogTitle>
+            <DialogContent>
+              <FormControl>
+                <RadioGroup
+                  value={accessType}
+                  onChange={(e) => setAccessType(e.target.value)}
+                >
+                  <FormControlLabel value="protected" control={<Radio />} label="Protected (Only allowed emails)" />
+                  <FormControlLabel value="unprotected" control={<Radio />} label="Unprotected (Anyone with link)" />
+                </RadioGroup>
+              </FormControl>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setPublishDialogOpen(false)} color="secondary">Cancel</Button>
+              <Button
+                variant="contained"
+                onClick={async () => {
+                  setPublishDialogOpen(false);
+                  setLoading(true);
+                  await handleSubmit(); // 👈 Publish test now
+                  if (accessType === "protected") {
+                    setOpenCSVModal(true); // 👈 Ask for CSV upload if protected
+                  }
+                  setOpenSuccessDialog(true); // 👈 Always show success dialog
+                  setLoading(false);
+                }}
+              >
+                Confirm & Publish
+              </Button>
+            </DialogActions>
+          </Dialog>
+
       </Box>
      
     </>

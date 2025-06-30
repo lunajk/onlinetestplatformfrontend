@@ -410,7 +410,7 @@ if (validDetections.length > 1) throw new Error('Multiple faces detected');
 
   <Grid container spacing={2} justifyContent="center" sx={{ mb: 5 }}>
     <Grid item xs={12} sm={4} md={3}>
-      <InfoBox icon={<TimerIcon />} text={`${testData?.time_limit} mins`} label="Time Limit" />
+      <InfoBox icon={<TimerIcon />} text={`${testData?.total_time_limit} mins`} label="Time Limit" />
     </Grid>
     <Grid item xs={12} sm={4} md={3}>
       <InfoBox icon={<AssignmentIcon />} text={testData?.total_questions} label="Total Questions" />

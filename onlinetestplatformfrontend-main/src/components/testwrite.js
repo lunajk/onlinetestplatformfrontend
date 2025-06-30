@@ -127,6 +127,17 @@ const questionTypes = {
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 export default function OnlineTestPage() {
+    const [disableRightClick, setDisableRightClick] = useState(false);
+    const [disableCopyPaste, setDisableCopyPaste] = useState(false);
+    const [disablePrinting, setDisablePrinting] = useState(false);
+    const [disableSpellcheck, setDisableSpellcheck] = useState(false);
+    const [disableAutocomplete, setDisableAutocomplete] = useState(false);
+    const [disableTranslate, setDisableTranslate] = useState(false);
+    const [randomizeOrder, setRandomizeOrder] = useState(false);
+    const [onlyMoveForward, setOnlyMoveForward] = useState(false);
+    const [allowJumpAround, setAllowJumpAround] = useState(true);
+    const [penalizeIncorrectAnswers, setPenalizeIncorrectAnswers] = useState(false);
+    const [allowBlankAnswers, setAllowBlankAnswers] = useState(true);
     const { uuid } = useParams();
 // ✅ Now we use uuid from the URL
     const [testId, setTestId] = useState(null);
@@ -182,46 +193,122 @@ const userToken = localStorage.getItem("user_token");
   }, [uuid, userToken]);
 
   const fetchQuestions = useCallback(async () => {
-    if (!testId) return;
+  if (!testId) return;
 
-    try {
-      const response = await axios.get(`${API_BASE_URL}/tests/${testId}/`, {
-        headers: { Authorization: `Token ${userToken}` },
+  try {
+    const response = await axios.get(`${API_BASE_URL}/tests/${testId}/`, {
+      headers: { Authorization: `Token ${userToken}` },
+    });
+
+    if (response.data && response.data.questions) {
+      let testQuestions = [...response.data.questions];
+
+      // 🌀 CASE 5: Randomize questions if enabled
+      if (response.data.randomize_order) {
+        for (let i = testQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [testQuestions[i], testQuestions[j]] = [testQuestions[j], testQuestions[i]];
+        }
+      }
+
+      setQuestions(testQuestions);
+
+      // ✅ CASE 5: Set control flags
+      setDisableRightClick(response.data.disable_right_click || false);
+      setDisableCopyPaste(response.data.disable_copy_paste || false);
+      setDisablePrinting(response.data.disable_printing || false);
+      setDisableSpellcheck(response.data.disable_spellcheck || false);
+      setDisableAutocomplete(response.data.disable_autocomplete || false);
+      setDisableTranslate(response.data.disable_translate || false);
+
+      setOnlyMoveForward(response.data.only_move_forward || false);
+      setAllowJumpAround(response.data.allow_jump_around ?? true);  // default true
+      setPenalizeIncorrectAnswers(response.data.penalize_incorrect_answers || false);
+      setAllowBlankAnswers(response.data.allow_blank_answers ?? true); // default true
+      setRandomizeOrder(response.data.randomize_order || false);
+
+      setTestTitle(response.data.title || "Unknown Test");
+      setTestSubject(response.data.subject || "Unknown Subject");
+      setPreviousScore(response.data.previous_score || 0);
+      setTestCategory(response.data.category || "");
+
+      // 📝 Set initial answers
+      const initialAnswers = testQuestions.map((question) => {
+        if (question.type === questionTypes.FILL_IN_THE_BLANKS) {
+          return Array((question.text.match(/____/g) || []).length).fill(null);
+        } else if (question.type === questionTypes.MULTIPLE_RESPONSE) {
+          return [];
+        } else {
+          return null;
+        }
       });
 
-      if (response.data && response.data.questions) {
-        setQuestions(response.data.questions);
+      setAnswers(initialAnswers);
+      setTotalQuestions(testQuestions.length);
 
-        setTestTitle(response.data.title || "Unknown Test");
-        setTestSubject(response.data.subject || "Unknown Subject");
-        setPreviousScore(response.data.previous_score || 0);
-        setTestCategory(response.data.category || "");
+      const totalTimeLimit = parseFloat(response.data.total_time_limit);
+      setTimeLeft(totalTimeLimit * 60);
 
-        const initialAnswers = response.data.questions.map((question) => {
-          if (question.type === questionTypes.FILL_IN_THE_BLANKS) {
-            return Array((question.text.match(/____/g) || []).length).fill(null);
-          } else if (question.type === questionTypes.MULTIPLE_RESPONSE) {
-            return [];
-          } else {
-            return null;
-          }
-        });
+      const questionTimeLimit = parseFloat(response.data.time_limit_per_question);
+      setCurrentQuestionTime(questionTimeLimit * 60);
 
-        setAnswers(initialAnswers);
-        setTotalQuestions(response.data.questions.length);
-
-        const totalTimeLimit = parseFloat(response.data.total_time_limit);
-        setTimeLeft(totalTimeLimit * 60);
-
-        const questionTimeLimit = parseFloat(response.data.time_limit_per_question);
-        setCurrentQuestionTime(questionTimeLimit * 60);
-
-        setPassCriteria(response.data.pass_criteria);
-      }
-    } catch (error) {
-      console.error("Error fetching questions:", error);
+      setPassCriteria(response.data.pass_criteria);
     }
-  }, [testId, userToken]);
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+  }
+}, [testId, userToken]);
+
+
+  useEffect(() => {
+    // Right-click
+    const handleRightClick = (e) => {
+        if (disableRightClick) e.preventDefault();
+    };
+
+    // Copy/Paste
+    const handleCopyPaste = (e) => {
+        if (disableCopyPaste) e.preventDefault();
+    };
+
+    // Print
+    const handleBeforePrint = (e) => {
+        if (disablePrinting) {
+            alert("Printing is disabled for this test.");
+            e.preventDefault();
+        }
+    };
+
+    // Translate (Google Translate Block)
+    if (disableTranslate) {
+        document.documentElement.setAttribute("translate", "no");
+        const style = document.createElement("style");
+        style.innerHTML = `
+            .prevent-translate {
+                translate: none !important;
+                -webkit-user-modify: read-only !important;
+            }
+            html {
+                translate: none !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Event listeners
+    document.addEventListener("contextmenu", handleRightClick);
+    document.addEventListener("copy", handleCopyPaste);
+    document.addEventListener("paste", handleCopyPaste);
+    window.addEventListener("beforeprint", handleBeforePrint);
+
+    return () => {
+        document.removeEventListener("contextmenu", handleRightClick);
+        document.removeEventListener("copy", handleCopyPaste);
+        document.removeEventListener("paste", handleCopyPaste);
+        window.removeEventListener("beforeprint", handleBeforePrint);
+    };
+}, [disableRightClick, disableCopyPaste, disablePrinting, disableTranslate]);
+
 
   useEffect(() => {
     decodeUUID();
@@ -271,156 +358,160 @@ const userToken = localStorage.getItem("user_token");
         }
     };
 
-    const handleSubmit = async () => {
-        let correctAnswers = 0;
-    
-        // Prepare answers to submit
-        const answersToSubmit = answers.map((answer, index) => ({
-            question: questions[index].id,
-            selected_option: answer || "", // Use an empty string for unanswered questions
-        }));
-    
-        // Iterate through each answer to check correctness
-        answersToSubmit.forEach((answer, index) => {
-            const question = questions[index];
-            const userAnswer = answer.selected_option;
-    
-            console.log("Question:", question);
-            console.log("User  Answer:", userAnswer);
-            console.log("Correct Answer:", question.correct_answer);
-    
-            if (userAnswer === "") return; // Skip if no answer provided
-    
-            switch (question.type) {
-                case questionTypes.FILL_IN_THE_BLANKS:
-                    // Check fill-in-the-blank answers
-                    if (typeof question.correct_answer === 'string' && 
-                        userAnswer.toLowerCase() === question.correct_answer.toLowerCase()) {
-                        correctAnswers++;
-                    }
-                    break;
-    
-                case questionTypes.TRUE_FALSE:
-                    // Check true/false answers
-                    const userAnswerBoolean = (userAnswer === "true");
-                    if (userAnswerBoolean === question.correct_answer) {
-                        correctAnswers++;
-                    }
-                    break;
-    
-                case questionTypes.MULTIPLE_CHOICE:
-                    // Check multiple choice answers
-                    if (typeof question.correct_answer === 'string' && 
-                        userAnswer.toLowerCase() === question.correct_answer.toLowerCase()) {
-                        correctAnswers++;
-                    }
-                    break;
-    
-                case questionTypes.MULTIPLE_RESPONSE:
-                    // Check multiple response answers
-                    const userAnswersArray = Array.isArray(userAnswer) ? userAnswer : [userAnswer];
-                    const correctAnswersArray = Array.isArray(question.correct_answer) ? question.correct_answer : [];
-    
-                    // Check if all user answers are in the correct answers
-                    const isCorrect = userAnswersArray.every(userAnswer => 
-                        correctAnswersArray.includes(userAnswer)
-                    );
-    
-                    if (isCorrect) {
-                        correctAnswers++;
-                    }
-                    break;
-    
-                default:
-                    console.warn("Unknown question type:", question.type);
-                    break;
-            }
-        });
-        const percentage = ((correctAnswers / questions.length) * 100).toFixed(2);
-        const userDetails = await fetchUserDetails();
-        setScore(percentage);
-        setPassFailStatus(percentage >= passCriteria);
-        setShowScoreModal(true);
-        setTimeTaken(timeTaken);
-    
-        try {
-            // Submit test attempt
-            await axios.put(
-                `${API_BASE_URL}/attempts/${testAttemptId}/`,
-                {
-                    answers: answersToSubmit,
-                    score: percentage,
-                    total_questions: totalQuestions,
-                    time_taken: timeTaken,
-                    passed: passFailStatus,
-                },
-                { headers: { Authorization: `Token ${userToken}` } }
-            );
-    
-            const attemptDate = new Date().toISOString();
-    
-// Update performance stats
-            await axios.post(
-                `${API_BASE_URL}/performance-stats/`,
-                {
-                    user: userDetails?.userId,
-                    name: testCategory || testTitle,
-                    score: percentage,
-                },
-                { headers: { Authorization: `Token ${userToken}` } }
-            );
-    
-            // Log recent activity
-            await axios.post(
-                `${API_BASE_URL}/recent-activities/`,
-                {
-                    user: userDetails?.userId,
-                    description: `Attempted ${testTitle}`,
-                    details: `Scored ${percentage}% in ${testSubject}`,
-                },
-                { headers: { Authorization: `Token ${userToken}` } }
-            );
-    
-            // Retrieve User Statistics
-            const statisticsResponse = await axios.get(
-                `${API_BASE_URL}/test-attempts/statistics/`,
-                { headers: { Authorization: `Token ${userToken}` } }
-            );
-    
-            const { highest_score, accuracy, certificates_earned } = statisticsResponse.data;
-    
-            // Retrieve Ranking after submission
-            const rankingResponse = await axios.get(
-                `${API_BASE_URL}/test-attempts/rank/${testId}/`,
-                { headers: { Authorization: `Token ${userToken}` } }
-            );
-    
-            const userRank = rankingResponse.data.rank || null;
-    
-            // Send data to Attempted Tests API (Including Ranking and Statistics)
-            await axios.post(
-                `${API_BASE_URL}/attempted-tests/`,
-                {
-                        user: userDetails?.userId,
-                        test: parseInt(testId),
-                        title: testTitle,
-                        subject: testSubject,
-                        date: attemptDate,
-                        max_score: highest_score, // Use the highest score from statistics
-                        status: percentage >= passCriteria ? "passed" : "failed", // Update status based on pass criteria
-                        rank: userRank, // Updated with ranking logic
-                        accuracy: accuracy, // Include accuracy from statistics
-                        certificates_earned: certificates_earned // Include certificates earned from statistics
-                   
-                },
-                { headers: { Authorization: `Token ${userToken}` } }
-            );
-    
-            console.log("Test submitted successfully. Ranking:", userRank);
-        } catch (error) {
-            console.error("Error submitting answers:", error.response ? error.response.data : error.message);
+const handleSubmit = async () => {
+    let correctAnswers = 0;
+
+    // Prepare answers to submit
+    const answersToSubmit = answers.map((answer, index) => ({
+        question: questions[index].id,
+        selected_option: answer || "", // Use empty string if no answer
+    }));
+
+    answersToSubmit.forEach((answerObj, index) => {
+        const question = questions[index];
+        const userAnswer = answerObj.selected_option;
+
+        if (userAnswer === "") return; // Skip unanswered
+
+        switch (question.type) {
+            case questionTypes.FILL_IN_THE_BLANKS:
+                const correctBlanks = Array.isArray(question.correct_answer)
+                    ? question.correct_answer
+                    : [question.correct_answer];
+
+                const userBlanks = Array.isArray(userAnswer)
+                    ? userAnswer
+                    : [userAnswer];
+
+                const isAllBlanksCorrect = correctBlanks.every((correctVal, i) =>
+                    userBlanks[i]?.toLowerCase().trim() === correctVal?.toLowerCase().trim()
+                );
+
+                if (isAllBlanksCorrect) correctAnswers++;
+                break;
+
+            case questionTypes.TRUE_FALSE:
+                const userBool = userAnswer === "true";
+                if (userBool === question.correct_answer) correctAnswers++;
+                break;
+
+            case questionTypes.MULTIPLE_CHOICE:
+                if (
+                    typeof question.correct_answer === "string" &&
+                    userAnswer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim()
+                ) {
+                    correctAnswers++;
+                }
+                break;
+
+            case questionTypes.MULTIPLE_RESPONSE:
+                const correctSet = new Set(
+                    (question.correct_answer || []).map((a) => a.toLowerCase().trim())
+                );
+                const userSet = new Set(
+                    (Array.isArray(userAnswer) ? userAnswer : [userAnswer]).map((a) =>
+                        a.toLowerCase().trim()
+                    )
+                );
+
+                if (
+                    correctSet.size === userSet.size &&
+                    [...userSet].every((ans) => correctSet.has(ans))
+                ) {
+                    correctAnswers++;
+                }
+                break;
+
+            default:
+                console.warn("Unknown question type:", question.type);
         }
-    };
+    });
+
+    const percentage = ((correctAnswers / questions.length) * 100).toFixed(2);
+    const userDetails = await fetchUserDetails();
+
+    setScore(percentage);
+    setPassFailStatus(percentage >= passCriteria);
+    setShowScoreModal(true);
+    setTimeTaken(timeTaken);
+
+    try {
+        // Submit the test attempt
+        await axios.put(
+            `${API_BASE_URL}/attempts/${testAttemptId}/`,
+            {
+                answers: answersToSubmit,
+                score: parseFloat(percentage),
+                total_questions: totalQuestions,
+                time_taken: timeTaken,
+                passed: percentage >= passCriteria,
+            },
+            { headers: { Authorization: `Token ${userToken}` } }
+        );
+
+        const attemptDate = new Date().toISOString();
+
+        // Update performance stats
+        await axios.post(
+            `${API_BASE_URL}/performance-stats/`,
+            {
+                user: userDetails?.userId,
+                name: testCategory || testTitle,
+                score: percentage,
+            },
+            { headers: { Authorization: `Token ${userToken}` } }
+        );
+
+        // Log activity
+        await axios.post(
+            `${API_BASE_URL}/recent-activities/`,
+            {
+                user: userDetails?.userId,
+                description: `Attempted ${testTitle}`,
+                details: `Scored ${percentage}% in ${testSubject}`,
+            },
+            { headers: { Authorization: `Token ${userToken}` } }
+        );
+
+        // Fetch stats and rank
+        const statsRes = await axios.get(
+            `${API_BASE_URL}/test-attempts/statistics/`,
+            { headers: { Authorization: `Token ${userToken}` } }
+        );
+
+        const { highest_score, accuracy, certificates_earned } = statsRes.data;
+
+        const rankRes = await axios.get(
+            `${API_BASE_URL}/test-attempts/rank/${testId}/`,
+            { headers: { Authorization: `Token ${userToken}` } }
+        );
+
+        const userRank = rankRes.data.rank || null;
+
+        // Save to attempted tests
+        await axios.post(
+            `${API_BASE_URL}/attempted-tests/`,
+            {
+                user: userDetails?.userId,
+                test: parseInt(testId),
+                title: testTitle,
+                subject: testSubject,
+                date: attemptDate,
+                max_score: highest_score,
+                status: percentage >= passCriteria ? "passed" : "failed",
+                rank: userRank,
+                accuracy,
+                certificates_earned,
+            },
+            { headers: { Authorization: `Token ${userToken}` } }
+        );
+
+        console.log("Test submitted successfully. Ranking:", userRank);
+    } catch (error) {
+        console.error("Error submitting test:", error.response?.data || error.message);
+    }
+};
+
     useEffect(() => {
         const timer = setInterval(() => {
             setTimeLeft((prevTime) => {
@@ -565,15 +656,26 @@ const userToken = localStorage.getItem("user_token");
     };
 
     const handleQuestionNavigation = (index) => {
-        // Check if the current question time has expired
-        if (timedOutQuestions.has(index)) {
-            alert("You cannot navigate to this question as the time has expired.");
-            return;
-        }
-        setCurrentQuestionIndex(index);
-        setSelectedOption(answers[index] || "");
-        setCurrentQuestionTime(questionTime);
+    if (timedOutQuestions.has(index)) {
+        alert("You cannot navigate to this question as the time has expired.");
+        return;
+    }
+
+    if (!allowJumpAround && index !== currentQuestionIndex) {
+        alert("Jumping between questions is disabled.");
+        return;
+    }
+
+    if (onlyMoveForward && index < currentQuestionIndex) {
+        alert("You cannot go back to previous questions.");
+        return;
+    }
+
+    setCurrentQuestionIndex(index);
+    setSelectedOption(answers[index] || "");
+    setCurrentQuestionTime(questionTime);
     };
+
 
     const { minutes, seconds } = formatTimeLeft(currentQuestionTime);
     const currentQuestion = questions[currentQuestionIndex] || null;
@@ -660,6 +762,9 @@ const userToken = localStorage.getItem("user_token");
                                                                 onChange={(e) => handleFillInTheBlanksChange(e, index)}
                                                                 value={answers[currentQuestionIndex]?.[index] || ""}
                                                                 placeholder="Type Here"
+                                                                className="prevent-translate"
+                                                                spellCheck={!disableSpellcheck}
+                                                                autoComplete={disableAutocomplete ? "off" : "on"}
                                                                 style={{
                                                                     padding: "16px",
                                                                     borderRadius: "8px",
@@ -671,7 +776,8 @@ const userToken = localStorage.getItem("user_token");
                                                                 }}
                                                                 onFocus={(e) => (e.target.style.borderColor = "#3182ce")}
                                                                 onBlur={(e) => (e.target.style.borderColor = "#ccc")}
-                                                            />
+                                                                />
+
                                                         )}
                                                     </span>
                                                 ))}

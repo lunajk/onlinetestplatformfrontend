@@ -13,6 +13,7 @@ import AdminNavbar from "./adminNavbar";
 const steps = ["Test Name & Description", "Question Creation", "Question Bank", "Set Time Limit & Marks", "Set Pass/Fail Criteria", "Settings", "Publish & Share"];
 const BASE_URL = "http://localhost:3000/smartbridge/online-test-assessment"; // Replace with your actual base URL
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
+
 const EditTestPage = () => {
         const [option, setOption] = useState(null);
         const [file, setFile] = useState(null);
@@ -67,19 +68,20 @@ const EditTestPage = () => {
         const [testLink, setTestLink] = useState("");
         const [newOption, setNewOption] = useState("");
         const navigate = useNavigate();
-        const { id } = useParams();
+        const { testId: testIdFromParams } = useParams();
         const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-  useEffect(() => {
+useEffect(() => {
   const fetchTestData = async () => {
     const userToken = localStorage.getItem("user_token");
     try {
-      const response = await axios.get(`${API_BASE_URL}/tests/${testId}/`, {
+      const response = await axios.get(`${API_BASE_URL}/tests/${testIdFromParams}/`, {
         headers: { Authorization: `Token ${userToken}` }
       });
 
       const data = response.data;
+      console.log("Fetched test data:", data);
 
       // Prefill form fields
       setTestName(data.title);
@@ -100,23 +102,55 @@ const EditTestPage = () => {
       setNumberOfRetakes(data.number_of_retakes);
       setReceiveEmailNotifications(data.receive_email_notifications);
       setNotificationEmails(data.notification_emails || []);
+      setTestId(data.id);
 
-      // Prefill questions
-      setQuestions(data.questions || []);
-      setTotalQuestions(data.questions.length);
-      setTotalMarks(data.questions.length * data.marks_per_question);
+      // 🔄 Transform questions to support frontend form logic
+      const transformedQuestions = (data.questions || []).map((q) => {
+          if (q.type === "multiplechoice") {
+            return {
+              ...q,
+              correctAnswer: typeof q.correct_answer === "number" ? q.correct_answer : -1
+            };
+          }
 
-      setTestId(data.id); // Set current testId
+          if (q.type === "multipleresponse") {
+            return {
+              ...q,
+              correctAnswers: Array.isArray(q.correct_answer) ? q.correct_answer : []
+            };
+          }
 
+          if (q.type === "truefalse") {
+            return {
+              ...q,
+              correctAnswer: q.correct_answer === true || q.correct_answer === "true"
+            };
+          }
+
+          if (q.type === "fillintheblank") {
+            return {
+              ...q,
+              correctAnswer: typeof q.correct_answer === "string" ? q.correct_answer : ""
+            };
+          }
+
+          return q;
+        });
+
+
+      setQuestions(transformedQuestions);
+      setTotalQuestions(transformedQuestions.length);
+      setTotalMarks(transformedQuestions.length * data.marks_per_question);
     } catch (error) {
       console.error("Failed to fetch test for editing:", error);
     }
   };
 
-  if (testId) {
+  if (testIdFromParams) {
     fetchTestData();
   }
-}, [testId]);
+}, [testIdFromParams]);
+
 
   useEffect(() => {
     if (openSuccessDialog && testId) {
@@ -403,7 +437,6 @@ const handleSubmit = async () => {
             total_marks: totalQuestionsCount * marksPerQuestion,
             subject,
             difficulty,
-          
             time_limit_per_question: timeLimitPerQuestion,
             total_time_limit: totalTimeLimit / 60,
             marks_per_question: marksPerQuestion,
@@ -460,10 +493,10 @@ const handleSubmit = async () => {
             ],
         };
 
-        // Step 1: Create the test
-        console.log("Sending testData:", JSON.stringify(testData, null, 2));
-        const response = await axios.post(
-            `${API_BASE_URL}/tests/`,
+        // Step 1: Update the test instead of creating a new one
+        console.log("Updating test with ID:", testId);
+        const response = await axios.put(
+            `${API_BASE_URL}/tests/${testId}/`,
             testData,
             {
                 headers: {
@@ -473,14 +506,11 @@ const handleSubmit = async () => {
             }
         );
 
-        const newTestId = response.data.id;
-        setTestId(newTestId); // Save test ID to state
-
-        // Step 2: Upload file if selected
+        // Optional Step 2: Upload file if needed
         if (file) {
             const formData = new FormData();
             formData.append("file", file);
-            formData.append("test_id", newTestId);
+            formData.append("test_id", testId);
 
             await axios.post(
                 `${API_BASE_URL}/questions/upload/`,
@@ -493,16 +523,18 @@ const handleSubmit = async () => {
             );
         }
 
-        setSuccess("Test and questions uploaded successfully!");
-        setFile(null); // Clear file
+        setSuccess("Test updated successfully!");
         setOpenSuccessDialog(true);
+        setFile(null);
+
     } catch (error) {
-        console.error("Error creating test or uploading questions:", error);
+        console.error("Error updating test:", error);
         setError(error.response?.data?.error || "Something went wrong.");
     } finally {
         setLoading(false);
     }
 };
+
 
     const saveQuestions = async (createdTestId) => {
         const userToken = localStorage.getItem("user_token");
@@ -805,14 +837,14 @@ const handleSubmit = async () => {
 {question.type === "multipleresponse" && (
     <>
         {question.options.map((option, optionIndex) => (
-            <div key={optionIndex} className="form-group" sx={{ mb: 2 }}>
-                <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
-                    <input
-                        type="checkbox"
-                        checked={question.correctAnswers.includes(option)}
-                        onChange={() => handleCorrectAnswersChange(qIndex, optionIndex)}
-                        style={{ marginRight: "12px", transform: "scale(1.2)" }}
-                    />
+    <div key={optionIndex} className="form-group" sx={{ mb: 2 }}>
+        <label style={{ display: "flex", alignItems: "center", fontSize: "14px" }}>
+            <input
+                type="checkbox"
+                checked={(question.correctAnswers || []).includes(option)}
+                onChange={() => handleCorrectAnswersChange(qIndex, optionIndex)}
+                style={{ marginRight: "12px", transform: "scale(1.2)" }}
+            />
                     <input
                         type="text"
                         value={option || ""}
@@ -863,13 +895,15 @@ const handleSubmit = async () => {
 <div style={{ marginTop: "16px" }}>
     <label style={{ fontSize: "14px", fontWeight: "bold" }}>Correct Answers:</label>
     <input
-        type="text"
-        value={question.correctAnswers.join(", ")} // Display selected correct answers directly
-        onChange={(e) => {
-            const answers = e.target.value.split(",").map(item => item.trim());
-            const correctAnswerIndices = answers.map(answer => question.options.indexOf(answer)).filter(index => index !== -1);
-            handleCorrectAnswersChange(qIndex, correctAnswerIndices); // Update correct answers based on input
-        }}
+    type="text"
+    value={(question.correctAnswers || []).join(", ")} // ✅ Safe join
+    onChange={(e) => {
+        const answers = e.target.value.split(",").map(item => item.trim());
+        const correctAnswerIndices = answers
+            .map(answer => (question.options || []).indexOf(answer))
+            .filter(index => index !== -1);
+        handleCorrectAnswersChange(qIndex, correctAnswerIndices);
+    }}
         placeholder="Type the correct answers here (comma separated)"
         style={{
             padding: "10px",
@@ -1238,260 +1272,260 @@ const handleSubmit = async () => {
                     );
                    
                     case 5:
-                        
-                        return (
-                            <Box sx={{ mt: 1, p: 3, borderRadius: 1, boxShadow: 2, backgroundColor: '#fff' }}>
-                                {/* Introduction Section */}
-                                <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
-                                    Introduction
-                                </Typography>
-                                <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
-                                    This text is displayed at the top of the test. You can use it for instructions or leave it blank.
-                                </Typography>
-                                <TextField
-                                    label="Instructions"
-                                    multiline
-                                    rows={3}
-                                    fullWidth
-                                    variant="outlined"
-                                    value={instructions}
-                                    onChange={(e) => setInstructions(e.target.value)}
-                                    sx={{ mb: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}
-                                />
-                   
-                                {/* Date and Time Settings */}
-                                <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold' }}>
-                                    Date and Time Settings
-                                </Typography>
-                                <TextField
-    label="Start Date"
-    type="date"
-    fullWidth
-    onChange={(e) => setStartDate(e.target.value)} // Correct usage
-    sx={{ mb: 2 }}
-    InputLabelProps={{ shrink: true }}
-/>
-<TextField
-    label="End Date"
-    type="date"
-    fullWidth
-    onChange={(e) => setEndDate(e.target.value)} // Correct usage
-    sx={{ mb: 2 }}
-    InputLabelProps={{ shrink: true }}
-/>
-<TextField
-    label="Due Time"
-    type="time"
-    fullWidth
-    onChange={(e) => setDueTime(e.target.value)} // Correct usage
-    sx={{ mb: 2 }}
-    InputLabelProps={{ shrink: true }}
-/>
-                                {/* Navigation Settings */}
-                                <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
-                                    Navigation Settings
-                                </Typography>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={allowJumpAround}
-                                            onChange={(e) => setAllowJumpAround(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Allow jumping between questions"
-                                />
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={onlyMoveForward}
-                                            onChange={(e) => setOnlyMoveForward(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Only move forward after answering"
-                                />
-                   
-                               
-                                {/* Browser Functionality Settings */}
-                                <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
-                                    Browser Functionality
-                                </Typography>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={disableRightClick}
-                                            onChange={(e) => setDisableRightClick(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Disable right-click context menu"
-                                />
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={disableCopyPaste}
-                                            onChange={(e) => setDisableCopyPaste(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Disable copy/paste"
-                                />
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={disableTranslate}
-                                            onChange={(e) => setDisableTranslate(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Disable translate"
-                                />
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={disableAutocomplete}
-                                            onChange={(e) => setDisableAutocomplete(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Disable autocomplete"
-                                />
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={disableSpellcheck}
-                                            onChange={(e) => setDisableSpellcheck(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Disable spellcheck"
-                                />
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={disablePrinting}
-                                            onChange={(e) => setDisablePrinting(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Disable printing"
-                                />
-                                {/* Allow Retake Option */}
-                                <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
-                                    Retake Settings
-                                </Typography>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={allowRetakes}
-                                            onChange={(e) => setAllowRetakes(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Allow students to retake the test"
-                                />
-                                {allowRetakes && (
-                                    <TextField
-                                        label="Number of Retakes"
-                                        type="number"
-                                        fullWidth
-                                        value={numberOfRetakes}
-                                        onChange={(e) => setNumberOfRetakes(e.target.value)}
-                                        sx={{ mt: 1, mb: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}
-                                    />
-                                )}
-                                {/* Other Settings */}
-                                <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
-                                    Other Settings
-                                </Typography>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={randomizeOrder}
-                                            onChange={(e) => setRandomizeOrder(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Randomize the order of the questions during the test"
-                                />
-
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={allowBlankAnswers}
-                                            onChange={(e) => setAllowBlankAnswers(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Allow students to submit blank/empty answers"
-                                />
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={penalizeIncorrectAnswers}
-                                            onChange={(e) => setPenalizeIncorrectAnswers(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Penalize incorrect answers (negative marking)"
-                                />
-                                          <FormControlLabel
-  control={
-    <Switch
-      checked={IsPublic}
-      onChange={(e) => setIsPublic(e.target.checked)}
-      name="isPublic"
-    />
-  }
-  label="Make this test public"
-/>
-
-                                 {/* Notifications */}
-                                 <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
-                                    Notifications
-                                </Typography>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={receiveEmailNotifications}
-                                            onChange={(e) => setReceiveEmailNotifications(e.target.checked)}
-                                            sx={{ color: '#00796b' }}
-                                        />
-                                    }
-                                    label="Receive an email whenever someone finishes this test"
-                                />
-                                {receiveEmailNotifications && (
-                                    <TextField
-                                        label="Enter email addresses (comma separated)"
-                                        variant="outlined"
-                                        fullWidth
-                                        value={notificationEmails}
-                                        onChange={(e) => setNotificationEmails(e.target.value)}
-                                        sx={{ mt: 1, backgroundColor: '#fff', borderRadius: 1 }}
-                                    />
-                                )}
-                   
-                   
-                                {/* Conclusion Section */}
-                                <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
-                                    Conclusion
-                                </Typography>
-                                <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
-                                    This text is displayed at the end of the test.
-                                </Typography>
-                                <TextField
-                                    label="Conclusion"
-                                    multiline
-                                    rows={3}
-                                    fullWidth
-                                    variant="outlined"
-                                    placeholder="Type your conclusion text here..."
-                                    onChange={(e) => setConclusion(e.target.value)}
-                                    sx={{ mb: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}
-                                />
-                            </Box>
-                        );
+                                            
+                                            return (
+                                                <Box sx={{ mt: 1, p: 3, borderRadius: 1, boxShadow: 2, backgroundColor: '#fff' }}>
+                                                    {/* Introduction Section */}
+                                                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
+                                                        Introduction
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
+                                                        This text is displayed at the top of the test. You can use it for instructions or leave it blank.
+                                                    </Typography>
+                                                    <TextField
+                                                        label="Instructions"
+                                                        multiline
+                                                        rows={3}
+                                                        fullWidth
+                                                        variant="outlined"
+                                                        value={instructions}
+                                                        onChange={(e) => setInstructions(e.target.value)}
+                                                        sx={{ mb: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}
+                                                    />
+                                       
+                                                    {/* Date and Time Settings */}
+                                                    <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold' }}>
+                                                        Date and Time Settings
+                                                    </Typography>
+                                                    <TextField
+                        label="Start Date"
+                        type="date"
+                        fullWidth
+                        onChange={(e) => setStartDate(e.target.value)} // Correct usage
+                        sx={{ mb: 2 }}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                        label="End Date"
+                        type="date"
+                        fullWidth
+                        onChange={(e) => setEndDate(e.target.value)} // Correct usage
+                        sx={{ mb: 2 }}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                        label="Due Time"
+                        type="time"
+                        fullWidth
+                        onChange={(e) => setDueTime(e.target.value)} // Correct usage
+                        sx={{ mb: 2 }}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                                                    {/* Navigation Settings */}
+                                                    <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
+                                                        Navigation Settings
+                                                    </Typography>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={allowJumpAround}
+                                                                onChange={(e) => setAllowJumpAround(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Allow jumping between questions"
+                                                    />
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={onlyMoveForward}
+                                                                onChange={(e) => setOnlyMoveForward(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Only move forward after answering"
+                                                    />
+                                       
+                                                   
+                                                    {/* Browser Functionality Settings */}
+                                                    <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
+                                                        Browser Functionality
+                                                    </Typography>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={disableRightClick}
+                                                                onChange={(e) => setDisableRightClick(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Disable right-click context menu"
+                                                    />
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={disableCopyPaste}
+                                                                onChange={(e) => setDisableCopyPaste(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Disable copy/paste"
+                                                    />
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={disableTranslate}
+                                                                onChange={(e) => setDisableTranslate(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Disable translate"
+                                                    />
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={disableAutocomplete}
+                                                                onChange={(e) => setDisableAutocomplete(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Disable autocomplete"
+                                                    />
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={disableSpellcheck}
+                                                                onChange={(e) => setDisableSpellcheck(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Disable spellcheck"
+                                                    />
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={disablePrinting}
+                                                                onChange={(e) => setDisablePrinting(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Disable printing"
+                                                    />
+                                                    {/* Allow Retake Option */}
+                                                    <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
+                                                        Retake Settings
+                                                    </Typography>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={allowRetakes}
+                                                                onChange={(e) => setAllowRetakes(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Allow students to retake the test"
+                                                    />
+                                                    {allowRetakes && (
+                                                        <TextField
+                                                            label="Number of Retakes"
+                                                            type="number"
+                                                            fullWidth
+                                                            value={numberOfRetakes}
+                                                            onChange={(e) => setNumberOfRetakes(e.target.value)}
+                                                            sx={{ mt: 1, mb: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}
+                                                        />
+                                                    )}
+                                                    {/* Other Settings */}
+                                                    <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
+                                                        Other Settings
+                                                    </Typography>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={randomizeOrder}
+                                                                onChange={(e) => setRandomizeOrder(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Randomize the order of the questions during the test"
+                                                    />
+                    
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={allowBlankAnswers}
+                                                                onChange={(e) => setAllowBlankAnswers(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Allow students to submit blank/empty answers"
+                                                    />
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={penalizeIncorrectAnswers}
+                                                                onChange={(e) => setPenalizeIncorrectAnswers(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Penalize incorrect answers (negative marking)"
+                                                    />
+                                                              <FormControlLabel
+                      control={
+                        <Switch
+                          checked={IsPublic}
+                          onChange={(e) => setIsPublic(e.target.checked)}
+                          name="isPublic"
+                        />
+                      }
+                      label="Make this test public"
+                    />
+                    
+                                                     {/* Notifications */}
+                                                     <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 'bold', color: '#333' }}>
+                                                        Notifications
+                                                    </Typography>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={receiveEmailNotifications}
+                                                                onChange={(e) => setReceiveEmailNotifications(e.target.checked)}
+                                                                sx={{ color: '#00796b' }}
+                                                            />
+                                                        }
+                                                        label="Receive an email whenever someone finishes this test"
+                                                    />
+                                                    {receiveEmailNotifications && (
+                                                        <TextField
+                                                            label="Enter email addresses (comma separated)"
+                                                            variant="outlined"
+                                                            fullWidth
+                                                            value={notificationEmails}
+                                                            onChange={(e) => setNotificationEmails(e.target.value)}
+                                                            sx={{ mt: 1, backgroundColor: '#fff', borderRadius: 1 }}
+                                                        />
+                                                    )}
+                                       
+                                       
+                                                    {/* Conclusion Section */}
+                                                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
+                                                        Conclusion
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
+                                                        This text is displayed at the end of the test.
+                                                    </Typography>
+                                                    <TextField
+                                                        label="Conclusion"
+                                                        multiline
+                                                        rows={3}
+                                                        fullWidth
+                                                        variant="outlined"
+                                                        placeholder="Type your conclusion text here..."
+                                                        onChange={(e) => setConclusion(e.target.value)}
+                                                        sx={{ mb: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}
+                                                    />
+                                                </Box>
+                                            );
                         case 6:
                              // Calculate total questions
                             return (

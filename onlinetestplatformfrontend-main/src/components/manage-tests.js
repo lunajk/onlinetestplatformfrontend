@@ -194,42 +194,30 @@ const ManageTestsPage = () => {
             onClose={() => setSnackbarOpen(false)}
             message={snackbarMessage}
           />
-
-          <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+        <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
             <Box
               sx={{
                 position: "absolute",
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
-                width: 600,
-                height: 400,
+                width: 400,
                 bgcolor: "background.paper",
                 boxShadow: 24,
-                p: 6,
+                p: 4,
                 borderRadius: 2,
+                textAlign: "center",
               }}
             >
-              <Typography variant="h6" sx={{ fontSize: 20 }}>
+              <Typography variant="h6" sx={{ fontSize: 20, mb: 3 }}>
                 Test Duplicated Successfully!
               </Typography>
-              <Typography sx={{ mt: 2, fontSize: 16 }}>
-                Share this link:{" "}
-                <a href={testLink} target="_blank" rel="noopener noreferrer">
-                  {testLink}
-                </a>
-              </Typography>
               <Button
-                onClick={() => {
-                  navigator.clipboard.writeText(testLink);
-                  setSnackbarMessage("Test link copied!");
-                  setSnackbarOpen(true);
-                }}
-                startIcon={<ContentCopy />}
+                onClick={() => setModalOpen(false)}
                 variant="contained"
-                sx={{ mt: 3 }}
+                color="primary"
               >
-                Copy Link
+                Close
               </Button>
             </Box>
           </Modal>

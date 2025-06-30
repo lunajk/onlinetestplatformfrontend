@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import * as faceapi from "face-api.js";
 import axios from "axios";
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 const WebcamProctoring = ({ studentId, testId }) => {
+    const { uuid } = useParams();
     const videoRef = useRef(null);
     const [alertMessage, setAlertMessage] = useState(""); // Alert message for user feedback
     const [warningMessage, setWarningMessage] = useState(""); // Warning message for approaching alert limit
@@ -113,41 +115,55 @@ const WebcamProctoring = ({ studentId, testId }) => {
         });
     };
 
-    const logMalpractice = async (eventType) => {
-        const token = localStorage.getItem("user_token"); // Retrieve user token
-        if (!token) {
-            console.error("❌ No token found in localStorage");
-            return; // Prevent sending the request if token is missing
-        }
+    const logMalpractice = async (eventType, frameBlob = null) => {
+        console.log("🚀 frameBlob received:", frameBlob);
+    const token = localStorage.getItem("user_token");
+    const email = localStorage.getItem("testEmail");
+    const testId = parseInt(localStorage.getItem("testId"));
 
-        const data = {
-            student_id: studentId,
+    if (!token || !email || !testId || !eventType) {
+        console.error("❌ Missing required values");
+        return;
+    }
+
+    let data;
+    let headers = {
+        Authorization: `Token ${token}`,
+    };
+
+    if (frameBlob) {
+        
+        // ✅ Use FormData when a frame is provided
+        data = new FormData();
+        data.append("email", email);
+        data.append("test_id", testId);
+        data.append("event_type", eventType);
+        data.append("frame", frameBlob, "frame.jpg");
+
+        // 🚫 DO NOT manually set 'Content-Type' for FormData
+    } else {
+        // ✅ Use JSON if no image
+        data = {
+            email,
             test_id: testId,
             event_type: eventType,
         };
 
-        console.log("📤 Sending Malpractice Data:", data); // Debugging
+        headers["Content-Type"] = "application/json";
+    }
 
-        try {
-            const response = await axios.post(
-                `${API_BASE_URL}/log-malpractice/`,
-                data,
-                {
-                    headers: {
-                        Authorization: `Token ${token}`, // Include token in headers
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-            console.log("✅ Malpractice Logged:", response.data);
-        } catch (error) {
-            console.error("❌ Error logging malpractice:", error.response ? error.response.data : error.message);
-            if (error.response) {
-                console.error("Response data:", error.response.data);
-                console.error("Response status:", error.response.status);
-            }
-        }
-    };
+    try {
+        const response = await axios.post(
+            `${API_BASE_URL}/log-malpractice/`,
+            data,
+            { headers }
+        );
+
+        console.log("✅ Malpractice Logged:", response.data);
+    } catch (error) {
+        console.error("❌ Error logging malpractice:", error.response?.data || error.message);
+    }
+};
 
     const calibrateEyes = async () => {
         if (videoRef.current) {
@@ -301,7 +317,7 @@ const WebcamProctoring = ({ studentId, testId }) => {
         // Automatically exit the test without alerting the user
         console.log("🚪 Exiting test due to multiple alerts.");
         // Redirect to an exit page or perform any other action
-        window.location.href = "/smartbridge/online-test-assessment/:uuid/exit"; // Example redirect
+        window.location.href = (`/smartbridge/online-test-assessment/${uuid}/exit`); // Example redirect
     };
 
     useEffect(() => {
@@ -343,46 +359,51 @@ const WebcamProctoring = ({ studentId, testId }) => {
 
     // Function to capture frame for object detection
     const captureFrameForObjectDetection = async () => {
-        if (videoRef.current) {
-            const canvas = document.createElement("canvas");
-            const context = canvas.getContext("2d");
-            canvas.width = videoRef.current.videoWidth / 2; // Reduce width by half
-            canvas.height = videoRef.current.videoHeight / 2; // Reduce height by half
-            context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    if (videoRef.current) {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.width = videoRef.current.videoWidth / 2; // Reduce width by half
+        canvas.height = videoRef.current.videoHeight / 2; // Reduce height by half
+        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-            // Convert canvas to blob
-            canvas.toBlob(async (blob) => {
-                if (blob) {
-                    const formData = new FormData();
-                    formData.append("frame", blob, "frame.jpg");
+canvas.toBlob(async (blob) => {
+    if (blob) {
+        const formData = new FormData();
+        formData.append("email", localStorage.getItem("testEmail")); // Optional
+        formData.append("test_id", localStorage.getItem("testId"));
+        formData.append("event_type", "unauthorized_object_detected");
+        formData.append("frame", blob, "frame.jpg");
 
-                    try {
-                        const token = localStorage.getItem("user_token"); // Retrieve user token
-                        const response = await axios.post(
-                            `${API_BASE_URL}/log-malpractice/`,
-                            formData,
-                            {
-                                headers: {
-                                    "Authorization": `Token ${token}`, // Include token in headers
-                                    "Content-Type": "multipart/form-data",
-                                },
-                            }
-                        );
-
-                        console.log("✅ Backend response:", response.data);
-                        if (response.data.malpractice_detected) {
-                            setAlertMessage(response.data.message);
-                            handleAlert(); // Increment alert count
-                        } else {
-                            setAlertMessage(""); // Clear alert if no malpractice detected
-                        }
-                    } catch (error) {
-                        console.error("❌ Error sending frame:", error);
-                    }
+        try {
+            const token = localStorage.getItem("user_token");
+            const response = await axios.post(
+                `${API_BASE_URL}/log-malpractice/`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                        // Don't set Content-Type manually
+                    },
                 }
-            }, "image/jpeg");
+            );
+
+            console.log("✅ Backend response:", response.data);
+
+            if (response.data.malpractice_detected) {
+                const message = response.data.message || "⚠️ Unauthorized object detected!";
+                setAlertMessage(message);
+                handleAlert(message, "unauthorized_object_detected");
+            } else {
+                setAlertMessage("");
+            }
+        } catch (error) {
+            console.error("❌ Error sending frame:", error.response?.data || error.message);
         }
-    };
+    }
+}, "image/jpeg");
+
+    }
+};
 
     // Periodically capture frames for object detection
     useEffect(() => {

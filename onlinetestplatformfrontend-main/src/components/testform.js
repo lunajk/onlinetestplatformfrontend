@@ -49,6 +49,8 @@ const PreTestForm = () => {
             console.log("Token saved to localStorage:", data.token);
             localStorage.setItem('userToken', data.token);
           }
+          localStorage.setItem("testEmail", email);
+          localStorage.setItem("testId", testId);
           navigate(`/smartbridge/online-test-assessment/${uuid}/instructions/`);
         } else {
           alert(data.message || "You are not allowed to take this test.");
